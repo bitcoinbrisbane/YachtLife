@@ -79,9 +79,13 @@ YachtLife facilitates the management of yacht syndicates by connecting managemen
 - **Maintenance & Logbook**:
   - Review all logbook entries
   - Track fuel consumption across fleet
+  - Review maintenance requests from owners
+  - Approve/assign maintenance requests
   - Schedule preventive maintenance
   - Maintenance history and costs
   - Service provider management
+  - Photo attachments for issues
+  - Maintenance status tracking
 - **Voting & Governance**:
   - Create polls and proposals
   - Set voting periods
@@ -96,8 +100,12 @@ YachtLife facilitates the management of yacht syndicates by connecting managemen
   - Custom report builder
 - **Notifications & Communications**:
   - Send announcements to all owners
+  - Multi-channel delivery: Push, Email, SMS
+  - SMS via MessageBird/Twilio
   - Automated reminders (bookings, payments, maintenance)
   - Email and push notification management
+  - Notification templates and scheduling
+  - Delivery tracking and read receipts
 - **System Administration**:
   - User role management (admin, manager, owner)
   - System settings and configuration
@@ -128,6 +136,13 @@ YachtLife facilitates the management of yacht syndicates by connecting managemen
   - General logbook entries
   - Pre-departure checklist
   - Return/entry checklist
+- **Maintenance Requests**:
+  - Report issues with photos
+  - Take photos of damage/issues
+  - Submit maintenance requests
+  - Track request status
+  - View maintenance history
+  - Receive updates via push/SMS
 - **Voting**: Participate in syndicate decisions
 - **Notifications**: Receive booking confirmations, reminders, and announcements
 
@@ -308,6 +323,7 @@ External Services:
 - Stripe (Payment Processing for Apple/Google Pay)
 - Xero (Accounting & Invoice Management - source of truth)
 - Firebase Cloud Messaging (Push Notifications)
+- MessageBird / Twilio (SMS notifications)
 - AWS S3 / MinIO (Document & Image Storage)
 - SendGrid / AWS SES (Email notifications)
 ```
@@ -546,12 +562,54 @@ External Services:
 - created_at (timestamp)
 ```
 
+#### maintenance_requests
+```sql
+- id (uuid, primary key)
+- yacht_id (uuid, foreign key -> yachts.id)
+- user_id (uuid, foreign key -> users.id)
+- booking_id (uuid, foreign key -> bookings.id, nullable)
+- title (varchar)
+- description (text)
+- urgency (enum: 'low', 'medium', 'high', 'critical')
+- status (enum: 'submitted', 'acknowledged', 'in_progress', 'completed', 'cancelled')
+- photos (jsonb) -- Array of S3 image URLs
+- location (varchar) -- e.g., "Port Engine", "Galley", "Hull Starboard"
+- estimated_cost (decimal, nullable)
+- actual_cost (decimal, nullable)
+- assigned_to (varchar, nullable) -- Service provider
+- scheduled_date (date, nullable)
+- completed_date (date, nullable)
+- completed_by (uuid, foreign key -> users.id, nullable)
+- notes (text) -- Manager notes
+- created_at (timestamp)
+- updated_at (timestamp)
+```
+
+#### notifications
+```sql
+- id (uuid, primary key)
+- user_id (uuid, foreign key -> users.id, nullable) -- null for broadcast
+- title (varchar)
+- message (text)
+- type (enum: 'booking', 'invoice', 'maintenance', 'vote', 'announcement', 'reminder')
+- channels (jsonb) -- Array: ['push', 'email', 'sms']
+- status (enum: 'pending', 'sent', 'failed', 'delivered', 'read')
+- related_id (uuid, nullable) -- ID of related booking/invoice/etc
+- related_type (varchar, nullable) -- Type of related entity
+- scheduled_at (timestamp, nullable)
+- sent_at (timestamp, nullable)
+- read_at (timestamp, nullable)
+- created_at (timestamp)
+```
+
 ### Indexes
 - users: email, role
 - bookings: yacht_id, user_id, start_date, end_date, status
 - invoices: user_id, yacht_id, status, due_date
 - logbook_entries: yacht_id, booking_id, entry_type, created_at
 - syndicate_shares: yacht_id, user_id
+- maintenance_requests: yacht_id, user_id, status, urgency, created_at
+- notifications: user_id, status, type, scheduled_at
 
 ## API Design
 
@@ -645,10 +703,24 @@ External Services:
 - `PUT /api/v1/syndicate-shares/:id` - Update share
 - `DELETE /api/v1/syndicate-shares/:id` - Remove share
 
-### Notifications (Manager only)
-- `POST /api/v1/notifications/broadcast` - Send notification to all owners
-- `POST /api/v1/notifications/send` - Send notification to specific users
-- `GET /api/v1/notifications/history` - View notification history
+### Maintenance Requests
+- `GET /api/v1/maintenance-requests` - List maintenance requests (filtered by role)
+- `GET /api/v1/maintenance-requests/:id` - Get request details
+- `POST /api/v1/maintenance-requests` - Create maintenance request (owner)
+- `PUT /api/v1/maintenance-requests/:id` - Update request (manager only)
+- `POST /api/v1/maintenance-requests/:id/photos` - Upload photos
+- `PUT /api/v1/maintenance-requests/:id/status` - Update status (manager only)
+- `POST /api/v1/maintenance-requests/:id/assign` - Assign to service provider (manager)
+- `GET /api/v1/yachts/:id/maintenance-requests` - Get requests for specific yacht
+
+### Notifications
+- `GET /api/v1/notifications` - Get user's notifications
+- `GET /api/v1/notifications/:id` - Get notification details
+- `PUT /api/v1/notifications/:id/read` - Mark notification as read
+- `POST /api/v1/notifications/broadcast` - Send notification to all owners (manager only)
+- `POST /api/v1/notifications/send` - Send notification to specific users (manager only)
+- `GET /api/v1/notifications/history` - View notification history (manager only)
+- `POST /api/v1/notifications/schedule` - Schedule notification (manager only)
 
 ### Xero Integration (Manager only)
 - `GET /api/v1/xero/auth` - Initiate Xero OAuth flow
@@ -682,6 +754,7 @@ YachtLife/
 │   │   │   │   ├── votes.go
 │   │   │   │   ├── analytics.go
 │   │   │   │   ├── notifications.go
+│   │   │   │   ├── maintenance.go
 │   │   │   │   ├── syndicate.go
 │   │   │   │   └── xero.go
 │   │   │   ├── middleware/
@@ -701,7 +774,8 @@ YachtLife/
 │   │   │   ├── checklist.go
 │   │   │   ├── vote.go
 │   │   │   ├── syndicate_share.go
-│   │   │   └── notification.go
+│   │   │   ├── notification.go
+│   │   │   └── maintenance_request.go
 │   │   ├── services/
 │   │   │   ├── auth_service.go
 │   │   │   ├── apple_auth_service.go
@@ -710,7 +784,9 @@ YachtLife/
 │   │   │   ├── notification_service.go
 │   │   │   ├── analytics_service.go
 │   │   │   ├── email_service.go
+│   │   │   ├── sms_service.go
 │   │   │   ├── report_service.go
+│   │   │   ├── storage_service.go (S3/MinIO for photos)
 │   │   │   ├── xero_service.go
 │   │   │   └── stripe_service.go
 │   │   ├── repository/
@@ -753,6 +829,11 @@ YachtLife/
 │   │   │   ├── logbook/
 │   │   │   │   ├── LogbookListScreen.tsx
 │   │   │   │   └── CreateLogEntryScreen.tsx
+│   │   │   ├── maintenance/
+│   │   │   │   ├── MaintenanceRequestListScreen.tsx
+│   │   │   │   ├── CreateMaintenanceRequestScreen.tsx
+│   │   │   │   ├── MaintenanceRequestDetailScreen.tsx
+│   │   │   │   └── PhotoUploadComponent.tsx
 │   │   │   ├── checklists/
 │   │   │   │   ├── ChecklistScreen.tsx
 │   │   │   │   └── ChecklistFormScreen.tsx
@@ -808,6 +889,8 @@ YachtLife/
 │   │   │   │   └── ExpensesPage.tsx
 │   │   │   ├── maintenance/
 │   │   │   │   ├── MaintenanceSchedulePage.tsx
+│   │   │   │   ├── MaintenanceRequestsPage.tsx
+│   │   │   │   ├── MaintenanceRequestDetailPage.tsx
 │   │   │   │   ├── LogbookReviewPage.tsx
 │   │   │   │   └── ServiceHistoryPage.tsx
 │   │   │   ├── voting/
@@ -1000,6 +1083,16 @@ We'll build this application in a structured, phased approach. Here's what we'll
 - [ ] Return checklist
 - [ ] Build logbook screens
 - [ ] Checklist UI components
+- [ ] Maintenance request system
+  - [ ] Photo upload (mobile camera integration)
+  - [ ] Submit maintenance request
+  - [ ] View request status
+  - [ ] Manager review and assignment
+- [ ] Notification system
+  - [ ] Push notifications (Firebase)
+  - [ ] Email notifications (SendGrid)
+  - [ ] SMS notifications (MessageBird/Twilio)
+  - [ ] Notification preferences
 
 ### Phase 5: Voting & Governance (Week 8)
 - [ ] Create voting system
@@ -1105,6 +1198,8 @@ Key environment variables:
 - `FCM_SERVER_KEY`: Firebase Cloud Messaging key
 - `SENDGRID_API_KEY`: SendGrid API key for emails
 - `EMAIL_FROM`: From email address
+- `MESSAGEBIRD_API_KEY`: MessageBird API key for SMS (or `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN`)
+- `SMS_FROM`: SMS sender ID or phone number
 - `CORS_ALLOWED_ORIGINS`: Comma-separated list of allowed origins
 
 ## Contributing
