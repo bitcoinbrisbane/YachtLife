@@ -232,7 +232,7 @@ External Services:
 
 #### Mobile App (Owners)
 - **Framework**: React Native
-- **State Management**: Redux Toolkit / Zustand
+- **State Management**: Zustand
 - **Navigation**: React Navigation
 - **UI Components**: React Native Paper / Native Base
 - **Payment**: Stripe SDK (Apple Pay & Google Pay)
@@ -242,7 +242,7 @@ External Services:
 #### Web Dashboard (Management)
 - **Framework**: React 18+ with TypeScript
 - **Build Tool**: Vite
-- **State Management**: Redux Toolkit / Zustand
+- **State Management**: Zustand
 - **Routing**: React Router v6
 - **UI Library**: Material-UI (MUI) or Ant Design
 - **Data Visualization**: Recharts / Chart.js
@@ -661,12 +661,10 @@ YachtLife/
 │   │   │   ├── api.ts
 │   │   │   ├── appleAuth.ts
 │   │   │   └── payment.ts
-│   │   ├── store/
-│   │   │   ├── slices/
-│   │   │   │   ├── authSlice.ts
-│   │   │   │   ├── vesselSlice.ts
-│   │   │   │   └── bookingSlice.ts
-│   │   │   └── store.ts
+│   │   ├── stores/
+│   │   │   ├── authStore.ts
+│   │   │   ├── vesselStore.ts
+│   │   │   └── bookingStore.ts
 │   │   ├── types/
 │   │   └── utils/
 │   ├── android/
@@ -738,9 +736,11 @@ YachtLife/
 │   │   ├── services/
 │   │   │   └── api.ts
 │   │   ├── hooks/
-│   │   ├── store/
-│   │   │   ├── slices/
-│   │   │   └── store.ts
+│   │   ├── stores/
+│   │   │   ├── authStore.ts
+│   │   │   ├── vesselStore.ts
+│   │   │   ├── bookingStore.ts
+│   │   │   └── notificationStore.ts
 │   │   ├── types/
 │   │   ├── utils/
 │   │   └── App.tsx
@@ -847,7 +847,7 @@ We'll build this application in a structured, phased approach. Here's what we'll
   - [ ] Role-based access control middleware
 - [ ] Initialize React Native project (mobile)
 - [ ] Initialize React + Vite project (web dashboard)
-- [ ] Set up API client and state management for both frontends
+- [ ] Set up API client and Zustand state management for both frontends
 
 ### Phase 2: Core Booking System (Weeks 3-4)
 - [ ] Implement yacht management (CRUD)
