@@ -66,13 +66,16 @@ YachtLife facilitates the management of yacht syndicates by connecting managemen
   - Override or adjust bookings
   - Set blackout dates for maintenance
   - View booking history and patterns
-- **Financial Management**:
-  - Create and send invoices to owners
+- **Financial Management** (Xero Integration):
+  - Create invoices in Xero (synced to app)
+  - Send invoices to owners via app
   - Track payment status (paid, pending, overdue)
+  - Record payments back to Xero automatically
   - Expense tracking (fuel, maintenance, marina fees)
-  - Generate financial reports
+  - Generate financial reports from Xero data
   - Export data to CSV/PDF
   - Revenue forecasting
+  - Full Xero accounting integration (chart of accounts, reconciliation)
 - **Maintenance & Logbook**:
   - Review all logbook entries
   - Track fuel consumption across fleet
@@ -184,6 +187,86 @@ Bottom tab navigation:
 - **Invoices** (Financial)
 - **More** (Settings, voting, profile)
 
+## Xero Integration Architecture
+
+### Financial Data Flow
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Xero (Source of Truth)               │
+│  - Chart of Accounts                                    │
+│  - Invoices                                             │
+│  - Payments                                             │
+│  - Expenses                                             │
+│  - Financial Reports                                    │
+└────────────────┬────────────────────────────────────────┘
+                 │
+                 │ Xero API (OAuth 2.0)
+                 │
+┌────────────────▼────────────────────────────────────────┐
+│              YachtLife Backend (Go/Gin)                 │
+│                                                          │
+│  Xero Service Layer:                                    │
+│  ├─ Create Invoice in Xero → Sync to DB                │
+│  ├─ Webhook: Invoice status changes → Update DB        │
+│  ├─ Payment received via Stripe → Record in Xero       │
+│  ├─ Sync expenses from logbook → Xero bills            │
+│  └─ Fetch financial reports from Xero                   │
+│                                                          │
+└────────────────┬────────────────────────────────────────┘
+                 │
+        ┌────────┴────────┐
+        │                 │
+┌───────▼──────┐  ┌──────▼────────┐
+│  PostgreSQL  │  │  Web/Mobile   │
+│   (Cache)    │  │     Apps      │
+│              │  │               │
+│ - Invoices   │  │ - View Invoice│
+│ - Payments   │  │ - Pay Invoice │
+│ - Sync Status│  │ - View Reports│
+└──────────────┘  └───────────────┘
+```
+
+### Invoice Lifecycle
+
+1. **Invoice Creation (Web Dashboard)**:
+   - Manager creates invoice in web dashboard
+   - Backend creates invoice in Xero via API
+   - Xero returns invoice ID
+   - Backend saves invoice to PostgreSQL with `xero_invoice_id`
+   - Invoice appears in mobile app for owner
+
+2. **Payment (Mobile App)**:
+   - Owner views invoice in mobile app
+   - Owner pays via Apple Pay/Google Pay (Stripe)
+   - Stripe confirms payment
+   - Backend records payment in PostgreSQL with `stripe_payment_id`
+   - Backend creates payment record in Xero via API
+   - Xero marks invoice as paid
+   - Backend syncs status back to PostgreSQL
+
+3. **Webhook Updates**:
+   - Xero sends webhook when invoice status changes
+   - Backend updates PostgreSQL cache
+   - Mobile/web apps show updated status
+
+### Xero Data Sync Strategy
+
+- **Invoices**: Created in Xero, cached in PostgreSQL for fast app access
+- **Payments**: Recorded in Stripe, then synced to Xero
+- **Expenses**: Logged in app, synced to Xero as bills/expenses
+- **Reports**: Generated from Xero data on-demand
+- **Contacts**: Yacht owners synced as Xero contacts
+
+### Benefits
+
+- ✅ Single source of truth for accounting
+- ✅ Professional financial reporting
+- ✅ Tax compliance and reconciliation
+- ✅ Integration with accountant workflows
+- ✅ Fast app performance (cached data)
+- ✅ Automatic payment reconciliation
+
 ## Architecture
 
 ### High-Level Architecture
@@ -223,6 +306,7 @@ Bottom tab navigation:
 External Services:
 - Apple Sign In (Mobile authentication)
 - Stripe (Payment Processing for Apple/Google Pay)
+- Xero (Accounting & Invoice Management - source of truth)
 - Firebase Cloud Messaging (Push Notifications)
 - AWS S3 / MinIO (Document & Image Storage)
 - SendGrid / AWS SES (Email notifications)
@@ -259,6 +343,10 @@ External Services:
 - **Authentication**: Apple Sign In (OAuth 2.0) + JWT tokens for session management
 - **Validation**: go-playground/validator
 - **Documentation**: Swagger/OpenAPI
+- **Integrations**:
+  - Xero API (accounting, invoices, payments)
+  - Stripe API (payment processing)
+  - Apple Sign In API
 
 #### Database
 - **Primary Database**: PostgreSQL 15+
@@ -375,6 +463,7 @@ External Services:
 #### invoices
 ```sql
 - id (uuid, primary key)
+- xero_invoice_id (varchar, unique) -- Xero invoice ID (source of truth)
 - yacht_id (uuid, foreign key -> yachts.id)
 - user_id (uuid, foreign key -> users.id)
 - invoice_number (varchar, unique)
@@ -384,6 +473,7 @@ External Services:
 - status (enum: 'draft', 'sent', 'paid', 'overdue', 'cancelled')
 - issued_date (date)
 - paid_date (date)
+- xero_synced_at (timestamp) -- Last sync time with Xero
 - created_at (timestamp)
 - updated_at (timestamp)
 ```
@@ -396,8 +486,10 @@ External Services:
 - amount (decimal)
 - payment_method (enum: 'apple_pay', 'google_pay', 'card')
 - stripe_payment_id (varchar)
+- xero_payment_id (varchar) -- Xero payment record ID
 - status (enum: 'pending', 'completed', 'failed', 'refunded')
 - paid_at (timestamp)
+- xero_synced_at (timestamp) -- Last sync time with Xero
 - created_at (timestamp)
 ```
 
@@ -502,16 +594,19 @@ External Services:
 - `POST /api/v1/bookings/:id/change-request` - Propose booking change
 - `GET /api/v1/yachts/:id/availability` - Check yacht availability
 
-### Invoices
-- `GET /api/v1/invoices` - List invoices (filtered by user)
+### Invoices (Xero Integration)
+- `GET /api/v1/invoices` - List invoices (from cache, synced with Xero)
 - `GET /api/v1/invoices/:id` - Get invoice details
-- `POST /api/v1/invoices` - Create invoice (manager only)
-- `PUT /api/v1/invoices/:id` - Update invoice (manager only)
+- `POST /api/v1/invoices` - Create invoice in Xero (manager only)
+- `PUT /api/v1/invoices/:id` - Update invoice in Xero (manager only)
+- `POST /api/v1/invoices/sync` - Manual sync with Xero (manager only)
+- `GET /api/v1/invoices/:id/pdf` - Get invoice PDF from Xero
 
-### Payments
+### Payments (Stripe + Xero)
 - `POST /api/v1/payments/create-intent` - Create Stripe payment intent
-- `POST /api/v1/payments/confirm` - Confirm payment
+- `POST /api/v1/payments/confirm` - Confirm payment and record in Xero
 - `GET /api/v1/payments/:id` - Get payment details
+- `POST /api/v1/payments/webhook` - Stripe webhook handler
 
 ### Logbook
 - `GET /api/v1/logbook` - List logbook entries
@@ -555,6 +650,16 @@ External Services:
 - `POST /api/v1/notifications/send` - Send notification to specific users
 - `GET /api/v1/notifications/history` - View notification history
 
+### Xero Integration (Manager only)
+- `GET /api/v1/xero/auth` - Initiate Xero OAuth flow
+- `GET /api/v1/xero/callback` - OAuth callback handler
+- `GET /api/v1/xero/status` - Check Xero connection status
+- `POST /api/v1/xero/sync/invoices` - Sync all invoices from Xero
+- `POST /api/v1/xero/sync/contacts` - Sync owners as Xero contacts
+- `POST /api/v1/xero/webhook` - Xero webhook handler
+- `GET /api/v1/xero/reports/profit-loss` - Get P&L report from Xero
+- `GET /api/v1/xero/reports/balance-sheet` - Get balance sheet from Xero
+
 ## Project Structure
 
 ```
@@ -577,7 +682,8 @@ YachtLife/
 │   │   │   │   ├── votes.go
 │   │   │   │   ├── analytics.go
 │   │   │   │   ├── notifications.go
-│   │   │   │   └── syndicate.go
+│   │   │   │   ├── syndicate.go
+│   │   │   │   └── xero.go
 │   │   │   ├── middleware/
 │   │   │   │   ├── auth.go
 │   │   │   │   ├── role.go (role-based access control)
@@ -604,7 +710,9 @@ YachtLife/
 │   │   │   ├── notification_service.go
 │   │   │   ├── analytics_service.go
 │   │   │   ├── email_service.go
-│   │   │   └── report_service.go
+│   │   │   ├── report_service.go
+│   │   │   ├── xero_service.go
+│   │   │   └── stripe_service.go
 │   │   ├── repository/
 │   │   │   ├── user_repository.go
 │   │   │   ├── yacht_repository.go
@@ -869,12 +977,21 @@ We'll build this application in a structured, phased approach. Here's what we'll
 - [ ] Add push notifications for bookings
 
 ### Phase 3: Financial Management (Weeks 5-6)
-- [ ] Invoice creation and management
+- [ ] Xero integration setup
+  - [ ] OAuth authentication flow
+  - [ ] Xero service layer
+  - [ ] Webhook handlers
+- [ ] Invoice management
+  - [ ] Create invoices in Xero
+  - [ ] Sync invoices to PostgreSQL
+  - [ ] Display in web dashboard
+  - [ ] Display in mobile app
 - [ ] Stripe integration for payments
-- [ ] Apple Pay / Google Pay implementation
+  - [ ] Apple Pay / Google Pay implementation
+  - [ ] Payment confirmation flow
+  - [ ] Record payments in Xero
+- [ ] Build invoice screens (web + mobile)
 - [ ] Payment history and receipts
-- [ ] Build invoice screens
-- [ ] Payment confirmation flow
 
 ### Phase 4: Logbook & Checklists (Week 7)
 - [ ] Fuel logging system
@@ -978,6 +1095,11 @@ Key environment variables:
 - `APPLE_PRIVATE_KEY`: Apple Sign In private key
 - `STRIPE_SECRET_KEY`: Stripe API key
 - `STRIPE_PUBLISHABLE_KEY`: Stripe publishable key
+- `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret
+- `XERO_CLIENT_ID`: Xero OAuth client ID
+- `XERO_CLIENT_SECRET`: Xero OAuth client secret
+- `XERO_REDIRECT_URI`: OAuth redirect URI
+- `XERO_WEBHOOK_KEY`: Xero webhook signing key
 - `S3_BUCKET`: S3/MinIO bucket name
 - `S3_ENDPOINT`: S3/MinIO endpoint URL
 - `FCM_SERVER_KEY`: Firebase Cloud Messaging key
