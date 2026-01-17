@@ -34,7 +34,7 @@ YachtLife facilitates the management of yacht syndicates by connecting managemen
 │                                                            │
 │              ⬇️  Shared API Backend (Go/Gin)  ⬇️            │
 │                                                            │
-│  🗄️  PostgreSQL  |  📦 Redis  |  💾 MinIO/S3              │
+│  🗄️  PostgreSQL  |  💾 MinIO/S3                           │
 │                                                            │
 └────────────────────────────────────────────────────────────┘
 ```
@@ -312,11 +312,7 @@ Bottom tab navigation:
                 │   ┌────▼─────┐
                 │   │PostgreSQL│
                 │   │ Database │
-                │   └────┬─────┘
-                │        │
-            ┌───▼────────▼───┐
-            │  Redis Cache   │
-            └────────────────┘
+                │   └──────────┘
 
 External Services:
 - Apple Sign In (Mobile authentication)
@@ -959,7 +955,7 @@ We'll build this application in a structured, phased approach. Here's what we'll
    - Initialize React + Vite project for web dashboard
 
 2. **Docker infrastructure**
-   - Create `docker-compose.yml` with PostgreSQL, Redis, and MinIO
+   - Create `docker-compose.yml` with PostgreSQL and MinIO
    - Set up `.env.example` with all required environment variables
    - Configure network and volume mappings
 
@@ -1027,9 +1023,9 @@ We'll build this application in a structured, phased approach. Here's what we'll
 ## Development Roadmap
 
 ### Phase 1: Foundation (Weeks 1-2)
-- [ ] Set up project structure (backend, mobile, web)
-- [ ] Configure Docker environment (PostgreSQL, Redis, MinIO)
-- [ ] Initialize Go backend with Gin
+- [x] Set up project structure (backend, mobile, web)
+- [x] Configure Docker environment (PostgreSQL, MinIO)
+- [x] Initialize Go backend with Gin
 - [ ] Set up database migrations
 - [ ] Implement authentication
   - [ ] Apple Sign In for mobile
@@ -1137,8 +1133,8 @@ We'll build this application in a structured, phased approach. Here's what we'll
 - Node.js 18+
 - Docker & Docker Compose
 - React Native CLI
-- Xcode (for iOS)
-- Android Studio (for Android)
+- Xcode (for iOS development)
+- Android Studio (for Android development)
 
 ### Environment Setup
 
@@ -1154,7 +1150,7 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
-3. Start infrastructure:
+3. Start infrastructure (PostgreSQL + MinIO):
 ```bash
 docker-compose up -d
 ```
@@ -1180,7 +1176,6 @@ npx react-native run-android
 
 Key environment variables:
 - `DATABASE_URL`: PostgreSQL connection string
-- `REDIS_URL`: Redis connection string
 - `JWT_SECRET`: Secret for JWT token signing
 - `APPLE_TEAM_ID`: Apple Developer Team ID
 - `APPLE_CLIENT_ID`: Apple Sign In Service ID
