@@ -96,13 +96,14 @@ struct HeroSection: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
+            // TODO: Fix hero image horizontal stretching issue
             // High-res yacht image background
-            Image("yacht-hero")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity)
-                .frame(height: 280)
-                .clipped()
+//            Image("yacht-hero")
+//                .resizable()
+//                .aspectRatio(contentMode: .fill)
+//                .frame(maxWidth: .infinity)
+//                .frame(height: 280)
+//                .clipped()
 
             // Dark gradient overlay for text readability
             LinearGradient(
