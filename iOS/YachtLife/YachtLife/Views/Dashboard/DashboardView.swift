@@ -100,6 +100,7 @@ struct HeroSection: View {
             Image("yacht-hero")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
+                .frame(maxWidth: .infinity)
                 .frame(height: 280)
                 .clipped()
 

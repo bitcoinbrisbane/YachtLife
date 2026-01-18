@@ -7,62 +7,6 @@ struct LoginView: View {
     @State private var isLoadingVessels = false
     @State private var vesselsError: String?
 
-    // Deprecated: Removed mock vessels, now fetching from API
-    private static let mockVesselsOLD = [
-        Yacht(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
-            name: "Neptune's Pride",
-            model: "Riviera 72 Sports Motor Yacht",
-            manufacturer: "Riviera",
-            yearBuilt: 2022,
-            length: 72.0,
-            totalShares: 8,
-            homePort: "Gold Coast Marina",
-            hullIdentificationNumber: "RIV72-2022-NPF001",
-            imageUrl: nil,
-            specifications: nil
-        ),
-        Yacht(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
-            name: "Ocean Majesty",
-            model: "Maritimo X60",
-            manufacturer: "Maritimo",
-            yearBuilt: 2023,
-            length: 60.0,
-            totalShares: 6,
-            homePort: "Sanctuary Cove",
-            hullIdentificationNumber: "MAR60-2023-NPF002",
-            imageUrl: nil,
-            specifications: nil
-        ),
-        Yacht(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
-            name: "Blue Trident",
-            model: "Sunseeker 88 Yacht",
-            manufacturer: "Sunseeker",
-            yearBuilt: 2021,
-            length: 88.0,
-            totalShares: 10,
-            homePort: "Sydney Harbour",
-            hullIdentificationNumber: "SUN88-2021-NPF003",
-            imageUrl: nil,
-            specifications: nil
-        ),
-        Yacht(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!,
-            name: "Pacific Sovereign",
-            model: "Princess 85 Motor Yacht",
-            manufacturer: "Princess",
-            yearBuilt: 2022,
-            length: 85.0,
-            totalShares: 10,
-            homePort: "Hamilton Island Marina",
-            hullIdentificationNumber: "PRI85-2022-NPF004",
-            imageUrl: nil,
-            specifications: nil
-        )
-    ]
-
     var body: some View {
         NavigationStack {
             VStack(spacing: 30) {

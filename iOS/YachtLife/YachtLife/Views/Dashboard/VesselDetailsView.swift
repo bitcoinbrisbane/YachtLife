@@ -93,7 +93,7 @@ struct VesselStatsGrid: View {
         ], spacing: 15) {
             VesselStatCard(
                 title: "Engine",
-                value: "\(yacht.specifications?.engineHorsepower ?? 900) HP",
+                value: "\(yacht.engineHorsepower ?? 900) HP",
                 icon: "engine.combustion.fill"
             )
 
@@ -232,22 +232,22 @@ struct ActionButtons: View {
             name: "Neptune's Pride",
             model: "Riviera 72 Sports Motor Yacht",
             manufacturer: "Riviera",
-            yearBuilt: 2022,
-            length: 72.0,
-            totalShares: 8,
+            year: 2022,
+            lengthFeet: 72.0,
+            beamFeet: 19.5,
+            draftFeet: 5.2,
+            hullId: "RIV72-2022-NPF001",
             homePort: "Gold Coast Marina",
-            hullIdentificationNumber: "RIV72-2022-NPF001",
-            imageUrl: nil,
-            specifications: Yacht.YachtSpecifications(
-                beam: 19.5,
-                draft: 5.2,
-                displacement: 45000,
-                fuelCapacity: 3000,
-                waterCapacity: 500,
-                engineMake: "Volvo Penta",
-                engineModel: "IPS 1200",
-                engineHorsepower: 900
-            )
+            maxPassengers: 12,
+            fuelCapacityLiters: 3000,
+            waterCapacityLiters: 500,
+            engineMake: "Volvo Penta",
+            engineModel: "IPS 1200",
+            engineCount: 2,
+            engineHorsepower: 900,
+            heroImageUrl: nil,
+            createdAt: nil,
+            updatedAt: nil
         ))
     }
 }
