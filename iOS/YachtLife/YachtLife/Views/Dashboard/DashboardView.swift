@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var authViewModel: AuthenticationViewModel
+    @State private var showingLogEntry = false
 
     // Mock Neptune Oceanic Fleet yacht
     private let mockYacht = Yacht(
@@ -61,7 +62,7 @@ struct DashboardView: View {
                     HeroSection(yacht: mockYacht, userName: authViewModel.currentUser?.fullName ?? "Owner")
 
                     // Stats Grid
-                    StatsGrid()
+                    StatsGrid(showingLogEntry: $showingLogEntry)
                         .padding(.horizontal)
                         .padding(.top, 20)
 
@@ -77,6 +78,13 @@ struct DashboardView: View {
             }
             .ignoresSafeArea(edges: .top)
             .navigationBarHidden(true)
+            .sheet(isPresented: $showingLogEntry) {
+                CreateLogEntryView(
+                    portEngineHours: "1247.5",
+                    starboardEngineHours: "1248.2",
+                    fuelLevel: "2550"
+                )
+            }
         }
     }
 }
@@ -88,24 +96,24 @@ struct HeroSection: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            // Gradient Background
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color.blue.opacity(0.8),
-                    Color.cyan.opacity(0.6),
-                    Color.blue.opacity(0.9)
-                ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .frame(height: 280)
-
-            // Ocean wave pattern overlay
-            Image(systemName: "water.waves")
+            // High-res yacht image background
+            Image("yacht-hero")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(height: 280)
-                .foregroundColor(.white.opacity(0.1))
+                .clipped()
+
+            // Dark gradient overlay for text readability
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.black.opacity(0.6),
+                    Color.black.opacity(0.4),
+                    Color.black.opacity(0.7)
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 280)
 
             // Content
             VStack(alignment: .leading, spacing: 12) {
@@ -163,32 +171,55 @@ struct HeroSection: View {
 
 // MARK: - Stats Grid
 struct StatsGrid: View {
+    @Binding var showingLogEntry: Bool
+
     var body: some View {
-        LazyVGrid(columns: [
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-            GridItem(.flexible())
-        ], spacing: 15) {
-            StatCard(
-                icon: "calendar",
-                value: "2",
-                label: "Upcoming",
-                color: .blue
-            )
+        VStack(spacing: 15) {
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 15) {
+                StatCard(
+                    icon: "gauge.high",
+                    value: "1,247.5",
+                    label: "Port Engine",
+                    color: .blue
+                )
 
-            StatCard(
-                icon: "clock.fill",
-                value: "24",
-                label: "Hours Left",
-                color: .green
-            )
+                StatCard(
+                    icon: "gauge.high",
+                    value: "1,248.2",
+                    label: "Starboard Engine",
+                    color: .blue
+                )
+            }
 
-            StatCard(
-                icon: "doc.text.fill",
-                value: "1",
-                label: "Invoices",
-                color: .orange
-            )
+            LazyVGrid(columns: [
+                GridItem(.flexible())
+            ], spacing: 15) {
+                StatCard(
+                    icon: "fuelpump.fill",
+                    value: "2,550L",
+                    label: "Starting Fuel",
+                    color: .green
+                )
+            }
+
+            // Create Log Entry Button
+            Button {
+                showingLogEntry = true
+            } label: {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Create Log Entry")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(12)
+            }
         }
     }
 }
