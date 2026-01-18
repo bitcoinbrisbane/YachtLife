@@ -1,120 +1,303 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @State private var yachts: [Yacht] = []
-    @State private var upcomingBookings: [Booking] = []
-    @State private var isLoading = true
+    @EnvironmentObject var authViewModel: AuthenticationViewModel
+
+    // Mock Neptune Oceanic Fleet yacht
+    private let mockYacht = Yacht(
+        id: UUID(),
+        name: "Neptune's Pride",
+        model: "Riviera 72 Sports Motor Yacht",
+        manufacturer: "Riviera",
+        yearBuilt: 2022,
+        length: 72.0,
+        totalShares: 8,
+        homePort: "Gold Coast Marina",
+        hullIdentificationNumber: "RIV72-2022-NPF001",
+        imageUrl: nil,
+        specifications: Yacht.YachtSpecifications(
+            beam: 19.5,
+            draft: 5.2,
+            displacement: 45000,
+            fuelCapacity: 3000,
+            waterCapacity: 500,
+            engineMake: "Volvo Penta",
+            engineModel: "IPS 1200",
+            engineHorsepower: 900
+        )
+    )
+
+    // Mock upcoming bookings
+    private let mockBookings = [
+        Booking(
+            id: UUID(),
+            yachtId: UUID(),
+            userId: UUID(),
+            startDate: Calendar.current.date(byAdding: .day, value: 5, to: Date())!,
+            endDate: Calendar.current.date(byAdding: .day, value: 8, to: Date())!,
+            standbyDays: 2,
+            status: .confirmed,
+            notes: "Weekend cruise to Whitsundays",
+            createdAt: Date()
+        ),
+        Booking(
+            id: UUID(),
+            yachtId: UUID(),
+            userId: UUID(),
+            startDate: Calendar.current.date(byAdding: .day, value: 18, to: Date())!,
+            endDate: Calendar.current.date(byAdding: .day, value: 21, to: Date())!,
+            standbyDays: 1,
+            status: .pending,
+            notes: "Family fishing trip",
+            createdAt: Date()
+        )
+    ]
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
-                    // Yacht Cards
-                    if !yachts.isEmpty {
-                        ForEach(yachts) { yacht in
-                            YachtCard(yacht: yacht)
-                        }
-                    }
+                VStack(spacing: 0) {
+                    // Hero Section
+                    HeroSection(yacht: mockYacht, userName: authViewModel.currentUser?.fullName ?? "Owner")
+
+                    // Stats Grid
+                    StatsGrid()
+                        .padding(.horizontal)
+                        .padding(.top, 20)
 
                     // Upcoming Bookings
-                    if !upcomingBookings.isEmpty {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Upcoming Bookings")
-                                .font(.headline)
-                                .padding(.horizontal)
+                    UpcomingBookingsSection(bookings: mockBookings)
+                        .padding(.top, 25)
 
-                            ForEach(upcomingBookings) { booking in
-                                BookingRow(booking: booking)
-                            }
-                        }
-                    }
-
-                    if isLoading {
-                        ProgressView()
-                            .padding()
-                    }
+                    // Recent Activity
+                    RecentActivitySection()
+                        .padding(.top, 25)
+                        .padding(.bottom, 20)
                 }
-                .padding(.vertical)
             }
-            .navigationTitle("Dashboard")
-            .task {
-                await loadData()
-            }
+            .ignoresSafeArea(edges: .top)
+            .navigationBarHidden(true)
         }
-    }
-
-    private func loadData() async {
-        isLoading = true
-        do {
-            yachts = try await APIService.shared.getYachts()
-            upcomingBookings = try await APIService.shared.getBookings()
-        } catch {
-            print("Error loading dashboard: \(error)")
-        }
-        isLoading = false
     }
 }
 
-struct YachtCard: View {
+// MARK: - Hero Section
+struct HeroSection: View {
     let yacht: Yacht
+    let userName: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let imageUrl = yacht.imageUrl, let url = URL(string: imageUrl) {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                }
-                .frame(height: 200)
-                .clipped()
-            }
+        ZStack(alignment: .bottomLeading) {
+            // Gradient Background
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.blue.opacity(0.8),
+                    Color.cyan.opacity(0.6),
+                    Color.blue.opacity(0.9)
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .frame(height: 280)
 
-            VStack(alignment: .leading, spacing: 5) {
-                Text(yacht.name)
-                    .font(.title2)
-                    .fontWeight(.bold)
+            // Ocean wave pattern overlay
+            Image(systemName: "water.waves")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(height: 280)
+                .foregroundColor(.white.opacity(0.1))
 
-                Text("\(yacht.manufacturer) \(yacht.model)")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-
+            // Content
+            VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Label("\(Int(yacht.length))ft", systemImage: "ruler")
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Welcome back,")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.9))
+
+                        Text(userName)
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                    }
+
                     Spacer()
-                    Label(yacht.homePort, systemImage: "location.fill")
+
+                    Image(systemName: "ferry.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.white.opacity(0.9))
                 }
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .padding(.bottom, 8)
+
+                // Yacht Info Card
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(yacht.name)
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+
+                        Text("\(yacht.manufacturer) \(yacht.model)")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.9))
+
+                        HStack(spacing: 15) {
+                            Label("\(Int(yacht.length))ft", systemImage: "ruler")
+                            Label(yacht.homePort, systemImage: "location.fill")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.8))
+                    }
+
+                    Spacer()
+                }
+                .padding()
+                .background(.ultraThinMaterial.opacity(0.8))
+                .cornerRadius(12)
             }
             .padding()
+            .padding(.top, 40)
         }
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(12)
-        .padding(.horizontal)
     }
 }
 
-struct BookingRow: View {
+// MARK: - Stats Grid
+struct StatsGrid: View {
+    var body: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ], spacing: 15) {
+            StatCard(
+                icon: "calendar",
+                value: "2",
+                label: "Upcoming",
+                color: .blue
+            )
+
+            StatCard(
+                icon: "clock.fill",
+                value: "24",
+                label: "Hours Left",
+                color: .green
+            )
+
+            StatCard(
+                icon: "doc.text.fill",
+                value: "1",
+                label: "Invoices",
+                color: .orange
+            )
+        }
+    }
+}
+
+struct StatCard: View {
+    let icon: String
+    let value: String
+    let label: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 24))
+                .foregroundColor(color)
+
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+}
+
+// MARK: - Upcoming Bookings Section
+struct UpcomingBookingsSection: View {
+    let bookings: [Booking]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            HStack {
+                Text("Upcoming Bookings")
+                    .font(.headline)
+
+                Spacer()
+
+                NavigationLink {
+                    BookingsView()
+                } label: {
+                    Text("See All")
+                        .font(.subheadline)
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding(.horizontal)
+
+            ForEach(bookings) { booking in
+                BookingCard(booking: booking)
+            }
+        }
+    }
+}
+
+struct BookingCard: View {
     let booking: Booking
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text("Booking")
-                    .font(.headline)
-                Text(booking.startDate, style: .date)
+        HStack(spacing: 15) {
+            // Date Badge
+            VStack(spacing: 2) {
+                Text(booking.startDate, format: .dateTime.month(.abbreviated))
                     .font(.caption)
                     .foregroundColor(.secondary)
+
+                Text(booking.startDate, format: .dateTime.day())
+                    .font(.title2)
+                    .fontWeight(.bold)
+            }
+            .frame(width: 50)
+            .padding(.vertical, 10)
+            .background(Color(.systemGray6))
+            .cornerRadius(10)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(booking.notes ?? "Yacht Booking")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+
+                HStack(spacing: 4) {
+                    Image(systemName: "calendar")
+                    Text("\(booking.startDate, format: .dateTime.day().month()) - \(booking.endDate, format: .dateTime.day().month())")
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+                if booking.standbyDays > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock.fill")
+                        Text("\(booking.standbyDays) standby days")
+                    }
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
             }
 
             Spacer()
 
+            // Status Badge
             Text(booking.status.rawValue.capitalized)
                 .font(.caption)
+                .fontWeight(.medium)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
                 .background(statusColor(booking.status).opacity(0.2))
@@ -122,8 +305,9 @@ struct BookingRow: View {
                 .cornerRadius(8)
         }
         .padding()
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(10)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
         .padding(.horizontal)
     }
 
@@ -138,6 +322,84 @@ struct BookingRow: View {
     }
 }
 
+// MARK: - Recent Activity Section
+struct RecentActivitySection: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            Text("Recent Activity")
+                .font(.headline)
+                .padding(.horizontal)
+
+            VStack(spacing: 12) {
+                ActivityRow(
+                    icon: "checkmark.circle.fill",
+                    title: "Checklist Completed",
+                    subtitle: "Pre-departure checklist",
+                    time: "2 hours ago",
+                    color: .green
+                )
+
+                ActivityRow(
+                    icon: "fuelpump.fill",
+                    title: "Fuel Added",
+                    subtitle: "450L at Gold Coast Marina",
+                    time: "1 day ago",
+                    color: .blue
+                )
+
+                ActivityRow(
+                    icon: "dollarsign.circle.fill",
+                    title: "Payment Received",
+                    subtitle: "Invoice #1023 - $2,450",
+                    time: "3 days ago",
+                    color: .orange
+                )
+            }
+            .padding(.horizontal)
+        }
+    }
+}
+
+struct ActivityRow: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let time: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundColor(color)
+                .frame(width: 40, height: 40)
+                .background(color.opacity(0.15))
+                .cornerRadius(10)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Text(time)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(10)
+        .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 1)
+    }
+}
+
 #Preview {
     DashboardView()
+        .environmentObject(AuthenticationViewModel())
 }

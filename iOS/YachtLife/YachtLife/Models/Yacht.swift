@@ -1,6 +1,6 @@
 import Foundation
 
-struct Yacht: Codable, Identifiable {
+struct Yacht: Codable, Identifiable, Hashable {
     let id: UUID
     let name: String
     let model: String
@@ -13,7 +13,7 @@ struct Yacht: Codable, Identifiable {
     let imageUrl: String?
     let specifications: YachtSpecifications?
 
-    struct YachtSpecifications: Codable {
+    struct YachtSpecifications: Codable, Hashable {
         let beam: Double?
         let draft: Double?
         let displacement: Double?
