@@ -3,11 +3,14 @@ import SwiftUI
 struct LoginView: View {
     @EnvironmentObject var authViewModel: AuthenticationViewModel
     @State private var selectedVessel: Yacht?
+    @State private var vessels: [Yacht] = []
+    @State private var isLoadingVessels = false
+    @State private var vesselsError: String?
 
-    // Neptune Oceanic Fleet - Mock vessels
-    private let mockVessels = [
+    // Deprecated: Removed mock vessels, now fetching from API
+    private static let mockVesselsOLD = [
         Yacht(
-            id: UUID(),
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
             name: "Neptune's Pride",
             model: "Riviera 72 Sports Motor Yacht",
             manufacturer: "Riviera",
@@ -20,7 +23,7 @@ struct LoginView: View {
             specifications: nil
         ),
         Yacht(
-            id: UUID(),
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
             name: "Ocean Majesty",
             model: "Maritimo X60",
             manufacturer: "Maritimo",
@@ -33,7 +36,7 @@ struct LoginView: View {
             specifications: nil
         ),
         Yacht(
-            id: UUID(),
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
             name: "Blue Trident",
             model: "Sunseeker 88 Yacht",
             manufacturer: "Sunseeker",
@@ -46,7 +49,7 @@ struct LoginView: View {
             specifications: nil
         ),
         Yacht(
-            id: UUID(),
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!,
             name: "Pacific Sovereign",
             model: "Princess 85 Motor Yacht",
             manufacturer: "Princess",
@@ -81,15 +84,34 @@ struct LoginView: View {
 
                 // Vessel Selection
                 VStack(spacing: 15) {
-                    Picker("Vessel", selection: $selectedVessel) {
-                        Text("Choose a vessel").tag(nil as Yacht?)
-                        ForEach(mockVessels) { vessel in
-                            Text("\(vessel.name) - \(vessel.model)").tag(vessel as Yacht?)
+                    if isLoadingVessels {
+                        ProgressView("Loading vessels...")
+                            .padding()
+                    } else if let error = vesselsError {
+                        VStack(spacing: 10) {
+                            Text("Error loading vessels")
+                                .foregroundColor(.red)
+                            Text(error)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Button("Retry") {
+                                Task {
+                                    await fetchVessels()
+                                }
+                            }
                         }
+                        .padding()
+                    } else {
+                        Picker("Vessel", selection: $selectedVessel) {
+                            Text("Choose a vessel").tag(nil as Yacht?)
+                            ForEach(vessels) { vessel in
+                                Text("\(vessel.name) - \(vessel.model)").tag(vessel as Yacht?)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .padding(.horizontal, 40)
+                        .tint(.blue)
                     }
-                    .pickerStyle(.menu)
-                    .padding(.horizontal, 40)
-                    .tint(.blue)
 
                     if let vessel = selectedVessel {
                         VStack(alignment: .leading, spacing: 5) {
@@ -149,7 +171,26 @@ struct LoginView: View {
                 Spacer()
             }
             .navigationBarHidden(true)
+            .onAppear {
+                Task {
+                    await fetchVessels()
+                }
+            }
         }
+    }
+
+    private func fetchVessels() async {
+        isLoadingVessels = true
+        vesselsError = nil
+
+        do {
+            vessels = try await APIService.shared.getYachts()
+        } catch {
+            vesselsError = error.localizedDescription
+            print("Failed to fetch vessels: \(error)")
+        }
+
+        isLoadingVessels = false
     }
 }
 

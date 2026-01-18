@@ -19,6 +19,7 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db, jwtService, appleSignInService)
+	yachtHandler := handlers.NewYachtHandler(db)
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")
@@ -39,15 +40,11 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 			protected.GET("/auth/me", authHandler.GetCurrentUser)
 		}
 
-		// Yacht routes (to be implemented)
+		// Yacht routes (public - no authentication required for browsing)
 		yachts := v1.Group("/yachts")
 		{
-			yachts.GET("", func(c *gin.Context) {
-				c.JSON(501, gin.H{"message": "List Yachts - Not Implemented"})
-			})
-			yachts.GET("/:id", func(c *gin.Context) {
-				c.JSON(501, gin.H{"message": "Get Yacht - Not Implemented"})
-			})
+			yachts.GET("", yachtHandler.ListYachts)
+			yachts.GET("/:id", yachtHandler.GetYacht)
 		}
 
 		// Booking routes (to be implemented)
