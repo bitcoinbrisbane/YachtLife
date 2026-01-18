@@ -1,28 +1,42 @@
 package routes
 
 import (
+	"time"
+
+	"github.com/bitcoinbrisbane/yachtlife/internal/api/handlers"
+	"github.com/bitcoinbrisbane/yachtlife/internal/api/middleware"
 	"github.com/bitcoinbrisbane/yachtlife/internal/config"
+	"github.com/bitcoinbrisbane/yachtlife/internal/services"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 // SetupRoutes configures all API routes
 func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
+	// Initialize services
+	jwtService := services.NewJWTService(cfg.JWTSecret, 24*time.Hour)
+	appleSignInService := services.NewAppleSignInService(cfg.AppleClientID, cfg.AppleTeamID)
+
+	// Initialize handlers
+	authHandler := handlers.NewAuthHandler(db, jwtService, appleSignInService)
+
 	// API v1 routes
 	v1 := router.Group("/api/v1")
 	{
-		// Auth routes (to be implemented)
+		// Auth routes (public - no authentication required)
 		auth := v1.Group("/auth")
 		{
-			auth.POST("/apple", func(c *gin.Context) {
-				c.JSON(501, gin.H{"message": "Apple Sign In - Not Implemented"})
-			})
-			auth.POST("/login", func(c *gin.Context) {
-				c.JSON(501, gin.H{"message": "Login - Not Implemented"})
-			})
-			auth.POST("/register", func(c *gin.Context) {
-				c.JSON(501, gin.H{"message": "Register - Not Implemented"})
-			})
+			auth.POST("/apple", authHandler.AppleSignIn)
+			auth.POST("/login", authHandler.Login)
+			auth.POST("/refresh", authHandler.RefreshToken)
+		}
+
+		// Protected routes (require authentication)
+		protected := v1.Group("")
+		protected.Use(middleware.AuthMiddleware(jwtService))
+		{
+			// User routes
+			protected.GET("/auth/me", authHandler.GetCurrentUser)
 		}
 
 		// Yacht routes (to be implemented)
