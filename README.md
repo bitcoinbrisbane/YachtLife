@@ -4,11 +4,20 @@ A comprehensive yacht share/syndicate management platform for managing yacht own
 
 ## 🚀 Current Status
 
-**Phase**: Architecture & Planning ✅ COMPLETE
+**Phase**: Foundation & iOS App ✅ IN PROGRESS
 
-**Next Step**: Begin implementation - Set up project structure, Docker, and backend foundation
+**Completed**:
+- ✅ Go/Gin backend API with full authentication
+- ✅ PostgreSQL database with complete schema (13 tables)
+- ✅ Docker infrastructure (PostgreSQL + MinIO)
+- ✅ Native iOS app (Swift/SwiftUI) with MVVM architecture
+- ✅ iOS authentication, dashboard, bookings, invoices, maintenance views
 
-**Ready to build**: All architecture, database schema, API design, and tech stack decisions are finalized.
+**Next Steps**:
+- Build React web dashboard for management
+- Implement remaining iOS features (voting, logbook, checklists)
+- Add Xero integration
+- Implement Stripe payments with Apple Pay
 
 ---
 
@@ -23,8 +32,8 @@ YachtLife facilitates the management of yacht syndicates by connecting managemen
 │                      YachtLife Platform                    │
 ├────────────────────────────────────────────────────────────┤
 │                                                            │
-│  📱 Mobile App (React Native)    🖥️  Web Dashboard (React) │
-│  ├─ Apple Sign In                ├─ Email/Password Login  │
+│  📱 iOS App (Swift/SwiftUI)      🖥️  Web Dashboard (React) │
+│  ├─ Email/Password Login         ├─ Email/Password Login  │
 │  ├─ Vessel Dashboard             ├─ Fleet Management      │
 │  ├─ Booking Management           ├─ Master Calendar       │
 │  ├─ Invoice Payment              ├─ Invoice Creation      │
@@ -326,14 +335,14 @@ External Services:
 
 ### Tech Stack
 
-#### Mobile App (Owners)
-- **Framework**: React Native
-- **State Management**: Zustand
-- **Navigation**: React Navigation
-- **UI Components**: React Native Paper / Native Base
-- **Payment**: Stripe SDK (Apple Pay & Google Pay)
-- **Forms**: React Hook Form
-- **HTTP Client**: Axios
+#### iOS App (Owners)
+- **Language**: Swift 5.9+
+- **Framework**: SwiftUI
+- **Architecture**: MVVM (Model-View-ViewModel)
+- **Networking**: URLSession with async/await
+- **Payment**: Stripe SDK (Apple Pay)
+- **Minimum iOS**: 17.0+
+- **See**: `/iOS/README.md` for setup instructions
 
 #### Web Dashboard (Management)
 - **Framework**: React 18+ with TypeScript
@@ -804,7 +813,8 @@ YachtLife/
 │   ├── Dockerfile
 │   ├── go.mod
 │   └── go.sum
-├── mobile/                          (Owner App - React Native)
+├── iOS/                             (Owner App - Native Swift/SwiftUI)
+├── mobile/                          (DEPRECATED - Use iOS folder instead)
 │   ├── src/
 │   │   ├── screens/
 │   │   │   ├── auth/
@@ -1162,15 +1172,14 @@ go mod download
 go run cmd/server/main.go
 ```
 
-5. Run mobile app:
+5. Run iOS app:
 ```bash
-cd mobile
-npm install
-# For iOS
-npx react-native run-ios
-# For Android
-npx react-native run-android
+cd iOS
+# Open YachtLife.xcodeproj in Xcode
+# Select target device/simulator
+# Press Cmd+R to build and run
 ```
+See `iOS/README.md` for detailed setup instructions.
 
 ## Configuration
 
