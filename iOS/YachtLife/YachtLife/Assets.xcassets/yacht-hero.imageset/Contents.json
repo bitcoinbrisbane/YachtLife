@@ -1,15 +1,16 @@
 {
   "images" : [
     {
-      "filename" : "yacht-hero.jpg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "yacht-hero@2x.jpg",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "yacht-hero@3x.jpg",
       "idiom" : "universal",
       "scale" : "3x"
     }
