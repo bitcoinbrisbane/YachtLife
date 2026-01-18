@@ -12,33 +12,44 @@ Mobile application for yacht owners to manage bookings, invoices, maintenance, a
 
 ## Setup
 
-1. Install dependencies:
+✅ Dependencies installed
+✅ iOS and Android folders generated
+✅ Environment file created (.env)
+
+### Complete iOS Setup (One-Time)
+
+**1. Install CocoaPods** (if not already installed):
 ```bash
-yarn install
+sudo gem install cocoapods
 ```
 
-2. Install iOS dependencies:
+**2. Install iOS dependencies:**
 ```bash
 cd ios && pod install && cd ..
 ```
 
-3. Set up environment:
+### Running the App
+
+**Start Metro Bundler:**
 ```bash
-cp .env.example .env
-# Edit .env with your configuration
+yarn start
 ```
 
-## Running the App
-
-### iOS
+**iOS Simulator** (in a separate terminal):
 ```bash
 yarn ios
 ```
 
-### Android
+**Android Emulator** (in a separate terminal):
 ```bash
 yarn android
 ```
+
+### Troubleshooting
+
+- **CocoaPods not installed**: Run `sudo gem install cocoapods`
+- **Port 8081 already in use**: Kill Metro with `lsof -ti:8081 | xargs kill`
+- **Backend not responding**: Ensure Go backend is running on port 8080
 
 ## Project Structure
 
