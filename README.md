@@ -347,10 +347,13 @@ External Services:
 #### Web Dashboard (Management)
 - **Framework**: React 18+ with TypeScript
 - **Build Tool**: Vite
-- **State Management**: Zustand
+- **State Management**:
+  - TanStack Query (React Query) for server state
+  - React Context for authentication
+  - Local useState for UI state
 - **Routing**: React Router v6
-- **UI Library**: Material-UI (MUI) or Ant Design
-- **Data Visualization**: Recharts / Chart.js
+- **UI Library**: Material-UI (MUI)
+- **Data Visualization**: Recharts
 - **Tables**: TanStack Table (React Table)
 - **Forms**: React Hook Form + Zod validation
 - **Date Handling**: date-fns
@@ -933,11 +936,14 @@ YachtLife/
 │   │   ├── services/
 │   │   │   └── api.ts
 │   │   ├── hooks/
-│   │   ├── stores/
-│   │   │   ├── authStore.ts
-│   │   │   ├── vesselStore.ts
-│   │   │   ├── bookingStore.ts
-│   │   │   └── notificationStore.ts
+│   │   │   ├── useVessels.ts
+│   │   │   ├── useBookings.ts
+│   │   │   ├── useInvoices.ts
+│   │   │   └── useOwners.ts
+│   │   ├── context/
+│   │   │   └── AuthContext.tsx
+│   │   ├── theme/
+│   │   │   └── theme.ts
 │   │   ├── types/
 │   │   ├── utils/
 │   │   └── App.tsx
@@ -1044,7 +1050,10 @@ We'll build this application in a structured, phased approach. Here's what we'll
   - [ ] Role-based access control middleware
 - [ ] Initialize React Native project (mobile)
 - [ ] Initialize React + Vite project (web dashboard)
-- [ ] Set up API client and Zustand state management for both frontends
+- [ ] Set up API client and state management:
+  - [ ] TanStack Query for server state
+  - [ ] Auth Context for authentication
+  - [ ] MUI theme configuration
 
 ### Phase 2: Core Booking System (Weeks 3-4)
 - [ ] Implement yacht management (CRUD)
