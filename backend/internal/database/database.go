@@ -71,3 +71,37 @@ func RunMigrations(db *gorm.DB) error {
 	log.Println("✅ Database migrations completed")
 	return nil
 }
+
+// SeedData seeds the database with test data
+func SeedData(db *gorm.DB) error {
+	log.Println("🌱 Seeding database with test data...")
+
+	// Check if test user already exists
+	var existingUser models.User
+	result := db.Where("email = ?", "skipper@neptunefleet.com").First(&existingUser)
+
+	if result.Error == nil {
+		log.Println("✅ Test data already exists, skipping seed")
+		return nil
+	}
+
+	// Create test yacht owner with password "password123" for testing
+	// In production, password would only be set for managers/admins
+	testOwner := models.User{
+		Email:        "skipper@neptunefleet.com",
+		PasswordHash: "$2a$10$mH11p2dydxUv7v8gSnq/CObztVd.VhVYV3fNF1azFJ5QW.DaqIPC6", // bcrypt hash of "password123"
+		FirstName:    "Captain",
+		LastName:     "Jack Sparrow",
+		Phone:        "+61 412 345 678",
+		Country:      "Australia",
+		Role:         models.RoleOwner,
+	}
+
+	if err := db.Create(&testOwner).Error; err != nil {
+		return fmt.Errorf("failed to create test owner: %w", err)
+	}
+
+	log.Printf("✅ Created test owner: %s %s (%s)\n", testOwner.FirstName, testOwner.LastName, testOwner.Email)
+	log.Println("📧 Test credentials: skipper@neptunefleet.com / password123")
+	return nil
+}

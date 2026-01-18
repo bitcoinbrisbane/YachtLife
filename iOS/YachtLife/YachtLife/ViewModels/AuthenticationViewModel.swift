@@ -51,33 +51,15 @@ class AuthenticationViewModel: ObservableObject {
     }
 
     // Mock Apple Sign In for development/testing
+    // Uses the test account credentials to login via email/password
     func mockAppleSignIn(
         userIdentifier: String,
         email: String,
         fullName: PersonNameComponents?,
         selectedVessel: Yacht?
     ) async {
-        isLoading = true
-        errorMessage = nil
-
-        // Simulate network delay
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
-
-        // Create a mock user
-        let mockUser = User(
-            id: UUID(),
-            email: email,
-            fullName: fullName?.formatted() ?? "Yacht Owner",
-            role: .owner,
-            phone: nil,
-            createdAt: Date()
-        )
-
-        // Store mock token
-        apiService.setAuthToken("mock_token_\(userIdentifier)")
-        currentUser = mockUser
-        isAuthenticated = true
-
-        isLoading = false
+        // For now, use the test account to login
+        // In production, this would validate the Apple ID token
+        await login(email: "skipper@neptunefleet.com", password: "password123")
     }
 }
