@@ -52,12 +52,26 @@ class APIService {
         }
 
         guard 200...299 ~= httpResponse.statusCode else {
+            // Try to get error message from response
+            if let errorBody = String(data: data, encoding: .utf8) {
+                print("API Error (\(httpResponse.statusCode)): \(errorBody)")
+            }
             throw APIError.httpError(statusCode: httpResponse.statusCode)
         }
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(T.self, from: data)
+
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            // Print the raw JSON and decoding error for debugging
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("Failed to decode JSON: \(jsonString)")
+            }
+            print("Decoding error: \(error)")
+            throw APIError.decodingError(error)
+        }
     }
 
     // MARK: - Authentication
@@ -112,6 +126,7 @@ enum APIError: LocalizedError {
     case invalidURL
     case invalidResponse
     case httpError(statusCode: Int)
+    case decodingError(Error)
 
     var errorDescription: String? {
         switch self {
@@ -121,6 +136,8 @@ enum APIError: LocalizedError {
             return "Invalid response from server"
         case .httpError(let statusCode):
             return "HTTP error: \(statusCode)"
+        case .decodingError(let error):
+            return "Failed to decode response: \(error.localizedDescription)"
         }
     }
 }

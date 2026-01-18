@@ -9,7 +9,7 @@ struct User: Codable, Identifiable {
     let phone: String?
     let country: String?
     let profileImageUrl: String?
-    let createdAt: Date
+    let createdAt: Date?
 
     enum UserRole: String, Codable {
         case admin
