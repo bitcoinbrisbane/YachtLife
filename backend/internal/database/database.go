@@ -257,13 +257,17 @@ func SeedData(db *gorm.DB) error {
 	}
 
 	// Create seed bookings for Neptune's Pride
+	// Set times to 10am for start dates and 7pm for end dates
 	now := time.Now()
+	startTime := time.Date(now.Year(), now.Month(), now.Day(), 10, 0, 0, 0, now.Location())
+	endTime := time.Date(now.Year(), now.Month(), now.Day(), 19, 0, 0, 0, now.Location())
+
 	bookings := []models.Booking{
 		{
 			YachtID:     neptunesPride.ID,
 			UserID:      testOwnerUser.ID,
-			StartDate:   now.AddDate(0, 0, 5),  // 5 days from now
-			EndDate:     now.AddDate(0, 0, 8),  // 8 days from now
+			StartDate:   startTime.AddDate(0, 0, 5),  // 5 days from now at 10am
+			EndDate:     endTime.AddDate(0, 0, 8),    // 8 days from now at 7pm
 			StandbyDays: 2,
 			Status:      models.BookingStatusConfirmed,
 			Notes:       "Weekend cruise to Whitsundays",
@@ -271,8 +275,8 @@ func SeedData(db *gorm.DB) error {
 		{
 			YachtID:     neptunesPride.ID,
 			UserID:      testOwnerUser.ID,
-			StartDate:   now.AddDate(0, 0, 18), // 18 days from now
-			EndDate:     now.AddDate(0, 0, 21), // 21 days from now
+			StartDate:   startTime.AddDate(0, 0, 18), // 18 days from now at 10am
+			EndDate:     endTime.AddDate(0, 0, 21),   // 21 days from now at 7pm
 			StandbyDays: 1,
 			Status:      models.BookingStatusPending,
 			Notes:       "Family fishing trip",
@@ -280,8 +284,8 @@ func SeedData(db *gorm.DB) error {
 		{
 			YachtID:     neptunesPride.ID,
 			UserID:      testOwnerUser.ID,
-			StartDate:   now.AddDate(0, 1, 2),  // 1 month + 2 days from now
-			EndDate:     now.AddDate(0, 1, 5),  // 1 month + 5 days from now
+			StartDate:   startTime.AddDate(0, 1, 2),  // 1 month + 2 days from now at 10am
+			EndDate:     endTime.AddDate(0, 1, 5),    // 1 month + 5 days from now at 7pm
 			StandbyDays: 0,
 			Status:      models.BookingStatusConfirmed,
 			Notes:       "Summer vacation at Hamilton Island",

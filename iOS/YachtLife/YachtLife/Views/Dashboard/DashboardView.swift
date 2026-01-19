@@ -267,21 +267,9 @@ struct UpcomingBookingsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
-            HStack {
-                Text("Upcoming Bookings")
-                    .font(.headline)
-
-                Spacer()
-
-                NavigationLink {
-                    BookingsView()
-                } label: {
-                    Text("See All")
-                        .font(.subheadline)
-                        .foregroundColor(.blue)
-                }
-            }
-            .padding(.horizontal)
+            Text("Upcoming Bookings")
+                .font(.headline)
+                .padding(.horizontal)
 
             ForEach(bookings) { booking in
                 BookingCard(booking: booking)
@@ -315,34 +303,41 @@ struct BookingCard: View {
                     .font(.subheadline)
                     .fontWeight(.semibold)
 
-                HStack(spacing: 4) {
-                    Image(systemName: "calendar")
-                    Text("\(booking.startDate, format: .dateTime.day().month()) - \(booking.endDate, format: .dateTime.day().month())")
-                }
-                .font(.caption)
-                .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Details")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                        .textCase(.uppercase)
 
-                if booking.standbyDays > 0 {
                     HStack(spacing: 4) {
-                        Image(systemName: "clock.fill")
-                        Text("\(booking.standbyDays) standby days")
+                        Image(systemName: "calendar")
+                        Text("\(formattedDate(booking.startDate)) - \(formattedDate(booking.endDate))")
                     }
                     .font(.caption)
                     .foregroundColor(.secondary)
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "circle.fill")
+                            .font(.system(size: 6))
+                            .foregroundColor(statusColor(booking.status))
+                        Text(booking.status.rawValue.capitalized)
+                            .foregroundColor(statusColor(booking.status))
+                    }
+                    .font(.caption)
+
+                    if booking.standbyDays > 0 {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock.fill")
+                            Text("\(booking.standbyDays) standby days")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    }
                 }
             }
 
             Spacer()
-
-            // Status Badge
-            Text(booking.status.rawValue.capitalized)
-                .font(.caption)
-                .fontWeight(.medium)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(statusColor(booking.status).opacity(0.2))
-                .foregroundColor(statusColor(booking.status))
-                .cornerRadius(8)
         }
         .padding()
         .background(Color(.systemBackground))
@@ -359,6 +354,12 @@ struct BookingCard: View {
         case .completed: return .gray
         case .cancelled: return .red
         }
+    }
+
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E, d MMM yyyy"
+        return formatter.string(from: date)
     }
 }
 

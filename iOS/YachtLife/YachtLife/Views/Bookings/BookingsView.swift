@@ -78,15 +78,26 @@ struct BookingDetailView: View {
 
     var body: some View {
         List {
-            Section("Dates") {
-                LabeledContent("Start", value: booking.startDate, format: .dateTime)
-                LabeledContent("End", value: booking.endDate, format: .dateTime)
+            Section("Details") {
+                LabeledContent("Start") {
+                    Text(formattedDate(booking.startDate))
+                }
+                LabeledContent("End") {
+                    Text(formattedDate(booking.endDate))
+                }
+                LabeledContent("Status") {
+                    HStack(spacing: 4) {
+                        Image(systemName: "circle.fill")
+                            .font(.system(size: 6))
+                            .foregroundColor(statusColor(booking.status))
+                        Text(booking.status.rawValue.capitalized)
+                            .foregroundColor(statusColor(booking.status))
+                    }
+                }
                 LabeledContent("Standby Days", value: "\(booking.standbyDays)")
-            }
-
-            Section("Status") {
-                LabeledContent("Current Status", value: booking.status.rawValue.capitalized)
-                LabeledContent("Created", value: booking.createdAt, format: .dateTime)
+                LabeledContent("Created") {
+                    Text(formattedDate(booking.createdAt))
+                }
             }
 
             if let notes = booking.notes {
@@ -96,6 +107,22 @@ struct BookingDetailView: View {
             }
         }
         .navigationTitle("Booking Details")
+    }
+
+    private func statusColor(_ status: Booking.BookingStatus) -> Color {
+        switch status {
+        case .confirmed: return .green
+        case .pending: return .orange
+        case .inProgress: return .blue
+        case .completed: return .gray
+        case .cancelled: return .red
+        }
+    }
+
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E, d MMM yyyy"
+        return formatter.string(from: date)
     }
 }
 
