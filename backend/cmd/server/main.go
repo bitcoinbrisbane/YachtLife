@@ -40,6 +40,11 @@ func main() {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
+	// Seed database with test data
+	if err := database.SeedData(db); err != nil {
+		log.Fatalf("Failed to seed database: %v", err)
+	}
+
 	// Initialize Gin router
 	router := gin.New()
 

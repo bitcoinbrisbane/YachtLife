@@ -38,8 +38,6 @@ build/
 *.xcuserstate
 *.xcuserdatad/
 xcuserdata/
-*.xcworkspace/!*.xcworkspace/contents.xcworkspacedata
-!*.xcworkspace/xcshareddata/
 DerivedData/
 *.ipa
 *.dSYM.zip
@@ -57,9 +55,12 @@ DerivedData/
 .xcode.env.local
 
 # CocoaPods
-Pods/
-*.xcworkspace/
-Podfile.lock
+**/ios/Pods/
+**/ios/*.xcworkspace/
+**/ios/Podfile.lock
+
+# React Native iOS
+**/ios/build/
 
 # Swift Package Manager
 .build/
