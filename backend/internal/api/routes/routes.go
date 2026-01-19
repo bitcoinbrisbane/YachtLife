@@ -22,6 +22,7 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	yachtHandler := handlers.NewYachtHandler(db)
 	userHandler := handlers.NewUserHandler(db)
 	logbookHandler := handlers.NewLogbookHandler(db)
+	bookingHandler := handlers.NewBookingHandler(db)
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")
@@ -71,12 +72,11 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 			protectedLogbook.POST("", logbookHandler.CreateLogbookEntry)
 		}
 
-		// Booking routes (to be implemented)
+		// Booking routes
 		bookings := v1.Group("/bookings")
 		{
-			bookings.GET("", func(c *gin.Context) {
-				c.JSON(501, gin.H{"message": "List Bookings - Not Implemented"})
-			})
+			bookings.GET("", bookingHandler.ListBookings)
+			bookings.GET("/:id", bookingHandler.GetBooking)
 		}
 
 		// Invoice routes (to be implemented)

@@ -76,9 +76,11 @@ func (h *LogbookHandler) DetectLogType(yachtID, userID uuid.UUID, now time.Time)
 func (h *LogbookHandler) CreateLogbookEntry(c *gin.Context) {
 	var req CreateLogbookEntryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		println("❌ Bind error:", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	println("✅ Request bound successfully. YachtID:", req.YachtID)
 
 	// Get authenticated user ID from context
 	userID, exists := c.Get("user_id")
@@ -107,15 +109,18 @@ func (h *LogbookHandler) CreateLogbookEntry(c *gin.Context) {
 	if req.EntryType != nil && *req.EntryType != "" {
 		// Use provided entry type
 		entryType = models.LogbookEntryType(*req.EntryType)
+		println("✅ Using provided entry type:", entryType)
 	} else {
 		// Auto-detect entry type based on bookings
 		detectedType, detectedBookingID, err := h.DetectLogType(yachtID, userUUID, time.Now())
 		if err != nil {
+			println("❌ Failed to detect log type:", err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to detect log type"})
 			return
 		}
 		entryType = detectedType
 		bookingID = detectedBookingID
+		println("✅ Auto-detected entry type:", entryType)
 	}
 
 	// Create logbook entry
@@ -130,10 +135,13 @@ func (h *LogbookHandler) CreateLogbookEntry(c *gin.Context) {
 		Notes:         req.Notes,
 	}
 
+	println("💾 Creating logbook entry in database...")
 	if err := h.db.Create(&entry).Error; err != nil {
+		println("❌ Database create failed:", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create logbook entry"})
 		return
 	}
+	println("✅ Logbook entry created with ID:", entry.ID.String())
 
 	// Load relationships
 	h.db.Preload("Yacht").Preload("Booking").Preload("User").First(&entry, entry.ID)

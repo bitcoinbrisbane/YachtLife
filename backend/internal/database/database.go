@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/bitcoinbrisbane/yachtlife/internal/config"
 	"github.com/bitcoinbrisbane/yachtlife/internal/models"
@@ -242,6 +243,67 @@ func SeedData(db *gorm.DB) error {
 			return fmt.Errorf("failed to create yacht %s: %w", yacht.Name, err)
 		}
 		log.Printf("✅ Created yacht: %s - %s %s\n", yacht.Name, yacht.Manufacturer, yacht.Model)
+	}
+
+	// Get Neptune's Pride yacht ID and test owner ID for bookings
+	var neptunesPride models.Yacht
+	if err := db.Where("hull_id = ?", "RIV72-2022-NPF001").First(&neptunesPride).Error; err != nil {
+		return fmt.Errorf("failed to find Neptune's Pride yacht: %w", err)
+	}
+
+	var testOwnerUser models.User
+	if err := db.Where("email = ?", "skipper@neptunefleet.com").First(&testOwnerUser).Error; err != nil {
+		return fmt.Errorf("failed to find test owner: %w", err)
+	}
+
+	// Create seed bookings for Neptune's Pride
+	now := time.Now()
+	bookings := []models.Booking{
+		{
+			YachtID:     neptunesPride.ID,
+			UserID:      testOwnerUser.ID,
+			StartDate:   now.AddDate(0, 0, 5),  // 5 days from now
+			EndDate:     now.AddDate(0, 0, 8),  // 8 days from now
+			StandbyDays: 2,
+			Status:      models.BookingStatusConfirmed,
+			Notes:       "Weekend cruise to Whitsundays",
+		},
+		{
+			YachtID:     neptunesPride.ID,
+			UserID:      testOwnerUser.ID,
+			StartDate:   now.AddDate(0, 0, 18), // 18 days from now
+			EndDate:     now.AddDate(0, 0, 21), // 21 days from now
+			StandbyDays: 1,
+			Status:      models.BookingStatusPending,
+			Notes:       "Family fishing trip",
+		},
+		{
+			YachtID:     neptunesPride.ID,
+			UserID:      testOwnerUser.ID,
+			StartDate:   now.AddDate(0, 1, 2),  // 1 month + 2 days from now
+			EndDate:     now.AddDate(0, 1, 5),  // 1 month + 5 days from now
+			StandbyDays: 0,
+			Status:      models.BookingStatusConfirmed,
+			Notes:       "Summer vacation at Hamilton Island",
+		},
+	}
+
+	for i, booking := range bookings {
+		// Check if similar booking already exists (same yacht, user, and start date)
+		var existingBooking models.Booking
+		result := db.Where("yacht_id = ? AND user_id = ? AND start_date = ?",
+			booking.YachtID, booking.UserID, booking.StartDate).First(&existingBooking)
+		if result.Error == nil {
+			continue // Skip if already exists
+		}
+
+		if err := db.Create(&booking).Error; err != nil {
+			return fmt.Errorf("failed to create booking %d: %w", i+1, err)
+		}
+		log.Printf("✅ Created booking: %s to %s (%s)\n",
+			booking.StartDate.Format("Jan 2"),
+			booking.EndDate.Format("Jan 2"),
+			booking.Status)
 	}
 
 	return nil

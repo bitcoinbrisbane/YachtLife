@@ -3,10 +3,13 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject var authViewModel: AuthenticationViewModel
     @State private var showingLogEntry = false
+    @State private var bookings: [Booking] = []
+    @State private var isLoadingBookings = false
+    @State private var bookingsError: String?
 
     // Mock Neptune Oceanic Fleet yacht
     private let mockYacht = Yacht(
-        id: UUID(),
+        id: UUID(uuidString: "e98b59ac-bdac-4513-9ddd-f032d3aa39f7")!,
         name: "Neptune's Pride",
         model: "Riviera 72 Sports Motor Yacht",
         manufacturer: "Riviera",
@@ -28,32 +31,6 @@ struct DashboardView: View {
         updatedAt: nil
     )
 
-    // Mock upcoming bookings
-    private let mockBookings = [
-        Booking(
-            id: UUID(),
-            yachtId: UUID(),
-            userId: UUID(),
-            startDate: Calendar.current.date(byAdding: .day, value: 5, to: Date())!,
-            endDate: Calendar.current.date(byAdding: .day, value: 8, to: Date())!,
-            standbyDays: 2,
-            status: .confirmed,
-            notes: "Weekend cruise to Whitsundays",
-            createdAt: Date()
-        ),
-        Booking(
-            id: UUID(),
-            yachtId: UUID(),
-            userId: UUID(),
-            startDate: Calendar.current.date(byAdding: .day, value: 18, to: Date())!,
-            endDate: Calendar.current.date(byAdding: .day, value: 21, to: Date())!,
-            standbyDays: 1,
-            status: .pending,
-            notes: "Family fishing trip",
-            createdAt: Date()
-        )
-    ]
-
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -67,8 +44,17 @@ struct DashboardView: View {
                         .padding(.top, 20)
 
                     // Upcoming Bookings
-                    UpcomingBookingsSection(bookings: mockBookings)
-                        .padding(.top, 25)
+                    if isLoadingBookings {
+                        ProgressView("Loading bookings...")
+                            .padding()
+                    } else if let error = bookingsError {
+                        Text("Error loading bookings: \(error)")
+                            .foregroundColor(.red)
+                            .padding()
+                    } else {
+                        UpcomingBookingsSection(bookings: bookings)
+                            .padding(.top, 25)
+                    }
 
                     // Recent Activity
                     RecentActivitySection()
@@ -78,6 +64,9 @@ struct DashboardView: View {
             }
             .ignoresSafeArea(edges: .top)
             .navigationBarHidden(true)
+            .onAppear {
+                loadBookings()
+            }
             .sheet(isPresented: $showingLogEntry) {
                 CreateLogEntryView(
                     yachtID: mockYacht.id,
@@ -86,6 +75,23 @@ struct DashboardView: View {
                     fuelLevel: "2550"
                 )
             }
+        }
+    }
+
+    private func loadBookings() {
+        Task {
+            isLoadingBookings = true
+            bookingsError = nil
+
+            do {
+                bookings = try await APIService.shared.getBookings(yachtId: mockYacht.id)
+                print("✅ Loaded \(bookings.count) bookings")
+            } catch {
+                bookingsError = error.localizedDescription
+                print("❌ Error loading bookings: \(error)")
+            }
+
+            isLoadingBookings = false
         }
     }
 }

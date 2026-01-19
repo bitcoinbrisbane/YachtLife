@@ -11,6 +11,18 @@ struct Booking: Codable, Identifiable {
     let notes: String?
     let createdAt: Date
 
+    enum CodingKeys: String, CodingKey {
+        case id
+        case yachtId = "yacht_id"
+        case userId = "user_id"
+        case startDate = "start_date"
+        case endDate = "end_date"
+        case standbyDays = "standby_days"
+        case status
+        case notes
+        case createdAt = "created_at"
+    }
+
     enum BookingStatus: String, Codable {
         case pending
         case confirmed
