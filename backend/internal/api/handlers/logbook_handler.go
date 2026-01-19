@@ -93,9 +93,10 @@ func (h *LogbookHandler) CreateLogbookEntry(c *gin.Context) {
 		return
 	}
 
-	userUUID, err := uuid.Parse(userID.(string))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID"})
+	// userID is already a uuid.UUID from the auth middleware
+	userUUID, ok := userID.(uuid.UUID)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type"})
 		return
 	}
 

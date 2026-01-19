@@ -33,7 +33,7 @@ YachtLife facilitates the management of yacht syndicates by connecting managemen
 ├────────────────────────────────────────────────────────────┤
 │                                                            │
 │  📱 iOS App (Swift/SwiftUI)      🖥️  Web Dashboard (React) │
-│  ├─ Email/Password Login         ├─ Email/Password Login  │
+│  ├─ Apple Sign In                ├─ Email/Password Login  │
 │  ├─ Vessel Dashboard             ├─ Fleet Management      │
 │  ├─ Booking Management           ├─ Master Calendar       │
 │  ├─ Invoice Payment              ├─ Invoice Creation      │
@@ -297,10 +297,10 @@ Bottom tab navigation:
 
 ```
 ┌─────────────────┐         ┌─────────────────┐
-│  Mobile Apps    │         │   Web Dashboard │
-│ (iOS & Android) │         │     (React)     │
-│  React Native   │         │  Management Co. │
-│   (Owners)      │         │  (Admin/Manager)│
+│   iOS App       │         │   Web Dashboard │
+│ (Swift/SwiftUI) │         │     (React)     │
+│   Yacht Owners  │         │  Management Co. │
+│                 │         │  (Admin/Manager)│
 └────────┬────────┘         └────────┬────────┘
          │                           │
          │         HTTPS/REST API    │
@@ -324,8 +324,8 @@ Bottom tab navigation:
                 │   └──────────┘
 
 External Services:
-- Apple Sign In (Mobile authentication)
-- Stripe (Payment Processing for Apple/Google Pay)
+- Apple Sign In (iOS authentication)
+- Stripe (Payment Processing for Apple Pay)
 - Xero (Accounting & Invoice Management - source of truth)
 - Firebase Cloud Messaging (Push Notifications)
 - MessageBird / Twilio (SMS notifications)
@@ -817,58 +817,31 @@ YachtLife/
 │   ├── go.mod
 │   └── go.sum
 ├── iOS/                             (Owner App - Native Swift/SwiftUI)
-├── mobile/                          (DEPRECATED - Use iOS folder instead)
-│   ├── src/
-│   │   ├── screens/
-│   │   │   ├── auth/
-│   │   │   │   ├── SignInScreen.tsx
-│   │   │   │   ├── OnboardingScreen.tsx (vessel & country selection)
-│   │   │   │   └── AppleSignInButton.tsx
-│   │   │   ├── dashboard/
-│   │   │   │   ├── VesselDashboard.tsx (landing page with hero image)
-│   │   │   │   └── SpecificationsCard.tsx
-│   │   │   ├── bookings/
-│   │   │   │   ├── BookingListScreen.tsx
-│   │   │   │   ├── CreateBookingScreen.tsx
-│   │   │   │   └── BookingDetailScreen.tsx
-│   │   │   ├── invoices/
-│   │   │   │   ├── InvoiceListScreen.tsx
-│   │   │   │   ├── InvoiceDetailScreen.tsx
-│   │   │   │   └── PaymentScreen.tsx
-│   │   │   ├── logbook/
-│   │   │   │   ├── LogbookListScreen.tsx
-│   │   │   │   └── CreateLogEntryScreen.tsx
-│   │   │   ├── maintenance/
-│   │   │   │   ├── MaintenanceRequestListScreen.tsx
-│   │   │   │   ├── CreateMaintenanceRequestScreen.tsx
-│   │   │   │   ├── MaintenanceRequestDetailScreen.tsx
-│   │   │   │   └── PhotoUploadComponent.tsx
-│   │   │   ├── checklists/
-│   │   │   │   ├── ChecklistScreen.tsx
-│   │   │   │   └── ChecklistFormScreen.tsx
-│   │   │   └── voting/
-│   │   │       ├── VoteListScreen.tsx
-│   │   │       └── VoteDetailScreen.tsx
-│   │   ├── components/
-│   │   │   ├── VesselHeroImage.tsx
-│   │   │   ├── SpecificationRow.tsx
-│   │   │   ├── StatCard.tsx
-│   │   │   └── BookingCalendar.tsx
-│   │   ├── navigation/
-│   │   ├── services/
-│   │   │   ├── api.ts
-│   │   │   ├── appleAuth.ts
-│   │   │   └── payment.ts
-│   │   ├── stores/
-│   │   │   ├── authStore.ts
-│   │   │   ├── vesselStore.ts
-│   │   │   └── bookingStore.ts
-│   │   ├── types/
-│   │   └── utils/
-│   ├── android/
-│   ├── ios/
-│   ├── package.json
-│   └── tsconfig.json
+│   ├── YachtLife/
+│   │   ├── YachtLife/
+│   │   │   ├── Models/
+│   │   │   │   ├── User.swift
+│   │   │   │   ├── Yacht.swift
+│   │   │   │   ├── Booking.swift
+│   │   │   │   ├── Invoice.swift
+│   │   │   │   ├── LogbookEntry.swift
+│   │   │   │   └── MaintenanceRequest.swift
+│   │   │   ├── Views/
+│   │   │   │   ├── Auth/
+│   │   │   │   ├── Dashboard/
+│   │   │   │   ├── Bookings/
+│   │   │   │   ├── Invoices/
+│   │   │   │   ├── Logbook/
+│   │   │   │   ├── Maintenance/
+│   │   │   │   └── Settings/
+│   │   │   ├── ViewModels/
+│   │   │   ├── Services/
+│   │   │   │   ├── APIService.swift
+│   │   │   │   └── AuthService.swift
+│   │   │   ├── Assets.xcassets/
+│   │   │   └── Info.plist
+│   │   └── YachtLife.xcodeproj/
+│   └── README.md
 ├── web/                             (Management Dashboard - React)
 │   ├── public/
 │   ├── src/
@@ -965,9 +938,9 @@ We'll build this application in a structured, phased approach. Here's what we'll
 
 #### Step 1: Project Foundation (START HERE)
 1. **Create project structure**
-   - Set up `/backend`, `/mobile`, and `/web` directories
+   - Set up `/backend`, `/iOS`, and `/web` directories
    - Initialize Go modules for backend
-   - Initialize React Native project for mobile app
+   - Initialize Swift/SwiftUI iOS project
    - Initialize React + Vite project for web dashboard
 
 2. **Docker infrastructure**
@@ -982,7 +955,7 @@ We'll build this application in a structured, phased approach. Here's what we'll
    - Set up basic routing and middleware
 
 4. **Database migrations**
-   - Create all 11 core tables (users, yachts, bookings, invoices, etc.)
+   - Create all 13 core tables (users, yachts, bookings, invoices, etc.)
    - Set up indexes
    - Add seed data for testing
 
@@ -993,10 +966,10 @@ We'll build this application in a structured, phased approach. Here's what we'll
    - JWT token generation and validation
    - Role-based access control middleware
 
-2. **Mobile authentication screens**
+2. **iOS authentication screens**
    - Sign in with Apple button
    - Onboarding flow (vessel & country selection)
-   - Token storage and refresh
+   - Token storage and refresh (Keychain)
 
 3. **Web authentication screens**
    - Login page with email/password
@@ -1007,16 +980,16 @@ We'll build this application in a structured, phased approach. Here's what we'll
 1. **Vessel management**
    - Backend CRUD APIs
    - Web dashboard for vessel management
-   - Mobile vessel dashboard with hero image
+   - iOS vessel dashboard with hero image
 
 2. **Booking system**
    - Backend booking logic
-   - Mobile booking screens
+   - iOS booking screens
    - Web master calendar
 
 3. **Basic invoicing**
    - Create invoices (web)
-   - View and pay invoices (mobile with Stripe)
+   - View and pay invoices (iOS with Stripe)
 
 #### Step 4: Iteration
 - Add remaining features (logbook, checklists, voting)
@@ -1028,11 +1001,11 @@ We'll build this application in a structured, phased approach. Here's what we'll
 1. ✅ Architecture & planning (COMPLETED)
 2. ✅ Project structure & Docker setup (COMPLETED)
 3. ✅ Backend foundation & auth (COMPLETED)
-4. ✅ Mobile app foundation (iOS scaffolded)
+4. ✅ iOS app foundation (COMPLETED - Swift/SwiftUI with MVVM architecture)
 5. ✅ Web dashboard foundation (COMPLETED - login, dashboard, vessels working)
 6. 🎯 Vessel & booking features (IN PROGRESS - vessel display working)
 7. 🎯 Financial features
-8. 🎯 Logbook & checklists
+8. 🎯 Logbook & checklists (IN PROGRESS - iOS create log entry working)
 9. 🎯 Voting & governance
 10. 🎯 Analytics & reporting
 
@@ -1048,7 +1021,7 @@ We'll build this application in a structured, phased approach. Here's what we'll
   - [x] Email/password for web dashboard (working with admin/manager users)
   - [x] JWT token management (bcrypt + JWT with 24h expiration)
   - [x] Role-based access control middleware
-- [x] Initialize React Native project (mobile)
+- [x] Initialize Swift/SwiftUI iOS project
 - [x] Initialize React + Vite project (web dashboard)
 - [x] Set up API client and state management:
   - [x] TanStack Query for server state
@@ -1071,7 +1044,7 @@ We'll build this application in a structured, phased approach. Here's what we'll
   - [ ] Cancel booking
   - [ ] Booking change requests
   - [ ] Availability calendar logic
-- [ ] Build mobile booking screens
+- [ ] Build iOS booking screens
   - [ ] Booking calendar view
   - [ ] Create/cancel booking
   - [ ] Booking change requests
@@ -1091,12 +1064,12 @@ We'll build this application in a structured, phased approach. Here's what we'll
   - [ ] Create invoices in Xero
   - [ ] Sync invoices to PostgreSQL
   - [ ] Display in web dashboard
-  - [ ] Display in mobile app
+  - [ ] Display in iOS app
 - [ ] Stripe integration for payments
-  - [ ] Apple Pay / Google Pay implementation
+  - [ ] Apple Pay implementation
   - [ ] Payment confirmation flow
   - [ ] Record payments in Xero
-- [ ] Build invoice screens (web + mobile)
+- [ ] Build invoice screens (web + iOS)
 - [ ] Payment history and receipts
 
 ### Phase 4: Logbook & Checklists (Week 7)
@@ -1104,10 +1077,10 @@ We'll build this application in a structured, phased approach. Here's what we'll
 - [ ] General logbook entries
 - [ ] Pre-departure checklist
 - [ ] Return checklist
-- [ ] Build logbook screens
-- [ ] Checklist UI components
+- [ ] Build logbook screens (iOS + web)
+- [ ] Checklist UI components (iOS + web)
 - [ ] Maintenance request system
-  - [ ] Photo upload (mobile camera integration)
+  - [ ] Photo upload (iOS camera integration)
   - [ ] Submit maintenance request
   - [ ] View request status
   - [ ] Manager review and assignment
@@ -1136,7 +1109,7 @@ We'll build this application in a structured, phased approach. Here's what we'll
   - [ ] Usage statistics visualizations
   - [ ] Custom report builder
   - [ ] Export to CSV/PDF
-- [ ] Mobile stats views (simplified)
+- [ ] iOS stats views (simplified)
 
 ### Phase 7: Polish & Testing (Week 10)
 - [ ] Comprehensive testing
@@ -1149,8 +1122,8 @@ We'll build this application in a structured, phased approach. Here's what we'll
 ### Phase 8: Deployment
 - [ ] Set up production infrastructure
 - [ ] CI/CD pipeline
-- [ ] App store submission (iOS)
-- [ ] Play Store submission (Android)
+- [ ] App Store submission (iOS)
+- [ ] TestFlight beta testing
 - [ ] Production monitoring
 
 ## Getting Started
@@ -1159,9 +1132,8 @@ We'll build this application in a structured, phased approach. Here's what we'll
 - Go 1.21+
 - Node.js 18+
 - Docker & Docker Compose
-- React Native CLI
-- Xcode (for iOS development)
-- Android Studio (for Android development)
+- Xcode 15+ (for iOS development)
+- macOS (for iOS development)
 
 ### Environment Setup
 
@@ -1189,9 +1161,17 @@ go mod download
 go run cmd/server/main.go
 ```
 
-5. Run iOS app:
+5. Run web dashboard:
 ```bash
-cd iOS
+cd web
+yarn install
+yarn dev
+# Open http://localhost:5173
+```
+
+6. Run iOS app:
+```bash
+cd iOS/YachtLife
 # Open YachtLife.xcodeproj in Xcode
 # Select target device/simulator
 # Press Cmd+R to build and run

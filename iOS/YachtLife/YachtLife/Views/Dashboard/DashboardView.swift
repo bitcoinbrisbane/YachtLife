@@ -80,6 +80,7 @@ struct DashboardView: View {
             .navigationBarHidden(true)
             .sheet(isPresented: $showingLogEntry) {
                 CreateLogEntryView(
+                    yachtID: mockYacht.id,
                     portEngineHours: "1247.5",
                     starboardEngineHours: "1248.2",
                     fuelLevel: "2550"
