@@ -11,6 +11,8 @@ export interface Yacht {
 	registration: string;
 	registration_country: string;
 	home_port: string;
+	berth_location: string;
+	berth_bay_number: string;
 	max_passengers: number;
 	cruising_speed_knots: number;
 	max_speed_knots: number;

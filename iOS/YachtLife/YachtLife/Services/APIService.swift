@@ -120,6 +120,16 @@ class APIService {
     func getYacht(id: UUID) async throws -> Yacht {
         try await request(endpoint: "/yachts/\(id)")
     }
+
+    // MARK: - Logbook
+    func getLogbookEntries(yachtId: UUID? = nil) async throws -> [LogbookEntry] {
+        let endpoint = yachtId != nil ? "/logbook?yacht_id=\(yachtId!)" : "/logbook"
+        return try await request(endpoint: endpoint)
+    }
+
+    func createLogbookEntry(_ request: CreateLogbookEntryRequest) async throws -> LogbookEntry {
+        try await self.request(endpoint: "/logbook", method: "POST", body: request)
+    }
 }
 
 enum APIError: LocalizedError {

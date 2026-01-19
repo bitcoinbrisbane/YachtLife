@@ -8,6 +8,8 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { VesselsPage } from "./pages/vessels/VesselsPage";
+import { OwnersPage } from "./pages/owners/OwnersPage";
+import { LogbookPage } from "./pages/logbook/LogbookPage";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 import { Box, CircularProgress } from "@mui/material";
 
@@ -119,7 +121,7 @@ function App() {
 								element={
 									<ProtectedRoute>
 										<DashboardLayout>
-											<Box>Owners Page - Coming Soon</Box>
+											<OwnersPage />
 										</DashboardLayout>
 									</ProtectedRoute>
 								}
@@ -130,6 +132,16 @@ function App() {
 									<ProtectedRoute>
 										<DashboardLayout>
 											<Box>Bookings Page - Coming Soon</Box>
+										</DashboardLayout>
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/logbook"
+								element={
+									<ProtectedRoute>
+										<DashboardLayout>
+											<LogbookPage />
 										</DashboardLayout>
 									</ProtectedRoute>
 								}

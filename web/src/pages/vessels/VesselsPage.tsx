@@ -87,7 +87,8 @@ export const VesselsPage = () => {
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 									<LocationIcon sx={{ fontSize: 18, color: "text.secondary" }} />
 									<Typography variant="body2" color="text.secondary">
-										{yacht.home_port}
+										{yacht.berth_location || yacht.home_port}
+										{yacht.berth_bay_number && ` (Bay ${yacht.berth_bay_number})`}
 									</Typography>
 								</Box>
 

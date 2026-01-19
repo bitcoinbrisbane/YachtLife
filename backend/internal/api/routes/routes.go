@@ -20,6 +20,8 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db, jwtService, appleSignInService)
 	yachtHandler := handlers.NewYachtHandler(db)
+	userHandler := handlers.NewUserHandler(db)
+	logbookHandler := handlers.NewLogbookHandler(db)
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")
@@ -45,6 +47,28 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		{
 			yachts.GET("", yachtHandler.ListYachts)
 			yachts.GET("/:id", yachtHandler.GetYacht)
+		}
+
+		// Owner routes (public - no authentication required for browsing)
+		owners := v1.Group("/owners")
+		{
+			owners.GET("", userHandler.ListOwners)
+			owners.GET("/:id", userHandler.GetOwner)
+		}
+
+		// Logbook routes
+		logbook := v1.Group("/logbook")
+		{
+			// Public routes - anyone can view logs
+			logbook.GET("", logbookHandler.ListLogbookEntries)
+			logbook.GET("/:id", logbookHandler.GetLogbookEntry)
+		}
+
+		// Protected logbook routes - require authentication
+		protectedLogbook := v1.Group("/logbook")
+		protectedLogbook.Use(middleware.AuthMiddleware(jwtService))
+		{
+			protectedLogbook.POST("", logbookHandler.CreateLogbookEntry)
 		}
 
 		// Booking routes (to be implemented)

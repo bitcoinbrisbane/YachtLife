@@ -20,6 +20,8 @@ type Yacht struct {
 	Registration        string         `gorm:"size:255" json:"registration"`
 	RegistrationCountry string         `gorm:"size:100" json:"registration_country"`
 	HomePort            string         `gorm:"size:255" json:"home_port"`
+	BerthLocation       string         `gorm:"size:255" json:"berth_location"`        // Marina/berth name
+	BerthBayNumber      string         `gorm:"size:50" json:"berth_bay_number"`       // Bay/slip number
 	MaxPassengers       int            `json:"max_passengers"`
 	CruisingSpeedKnots  float64        `gorm:"type:decimal(10,2)" json:"cruising_speed_knots"`
 	MaxSpeedKnots       float64        `gorm:"type:decimal(10,2)" json:"max_speed_knots"`

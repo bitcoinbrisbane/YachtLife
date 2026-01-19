@@ -3,6 +3,7 @@ import SwiftUI
 struct CreateLogEntryView: View {
     @Environment(\.dismiss) var dismiss
 
+    let yachtID: UUID
     let currentPortEngineHours: String
     let currentStarboardEngineHours: String
     let currentFuelLevel: String
@@ -11,8 +12,11 @@ struct CreateLogEntryView: View {
     @State private var starboardEngineHours: String
     @State private var fuelLevel: String
     @State private var notes = ""
+    @State private var isSaving = false
+    @State private var errorMessage: String?
 
-    init(portEngineHours: String = "1247.5", starboardEngineHours: String = "1248.2", fuelLevel: String = "2550") {
+    init(yachtID: UUID, portEngineHours: String = "1247.5", starboardEngineHours: String = "1248.2", fuelLevel: String = "2550") {
+        self.yachtID = yachtID
         self.currentPortEngineHours = portEngineHours
         self.currentStarboardEngineHours = starboardEngineHours
         self.currentFuelLevel = fuelLevel
@@ -82,21 +86,64 @@ struct CreateLogEntryView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        saveLogEntry()
+                        Task {
+                            await saveLogEntry()
+                        }
                     }
-                    .disabled(portEngineHours.isEmpty || starboardEngineHours.isEmpty || fuelLevel.isEmpty)
+                    .disabled(isSaving || portEngineHours.isEmpty || starboardEngineHours.isEmpty || fuelLevel.isEmpty)
                 }
+            }
+        }
+        .alert("Error", isPresented: .constant(errorMessage != nil)) {
+            Button("OK") {
+                errorMessage = nil
+            }
+        } message: {
+            if let errorMessage {
+                Text(errorMessage)
             }
         }
     }
 
-    private func saveLogEntry() {
-        // TODO: Save log entry to backend
-        print("Saving log entry: Port Engine: \(portEngineHours)hrs, Starboard Engine: \(starboardEngineHours)hrs, Fuel: \(fuelLevel)L, Notes: \(notes)")
-        dismiss()
+    private func saveLogEntry() async {
+        isSaving = true
+        errorMessage = nil
+
+        do {
+            // Calculate average engine hours and hours operated
+            guard let portHours = Double(portEngineHours),
+                  let starboardHours = Double(starboardEngineHours),
+                  let fuelLit = Double(fuelLevel),
+                  let prevPortHours = Double(currentPortEngineHours),
+                  let prevStarboardHours = Double(currentStarboardEngineHours) else {
+                errorMessage = "Please enter valid numbers"
+                isSaving = false
+                return
+            }
+
+            let hoursOperated = ((portHours - prevPortHours) + (starboardHours - prevStarboardHours)) / 2
+
+            let request = CreateLogbookEntryRequest(
+                yachtID: yachtID,
+                entryType: .general,
+                fuelLiters: fuelLit,
+                fuelCost: nil,
+                hoursOperated: hoursOperated > 0 ? hoursOperated : nil,
+                notes: notes.isEmpty ? nil : notes
+            )
+
+            _ = try await APIService.shared.createLogbookEntry(request)
+            print("✅ Log entry saved successfully")
+            dismiss()
+        } catch {
+            print("❌ Error saving log entry: \(error)")
+            errorMessage = error.localizedDescription
+        }
+
+        isSaving = false
     }
 }
 
 #Preview {
-    CreateLogEntryView()
+    CreateLogEntryView(yachtID: UUID())
 }

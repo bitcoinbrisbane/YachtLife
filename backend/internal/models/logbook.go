@@ -9,6 +9,8 @@ import (
 type LogbookEntryType string
 
 const (
+	EntryTypeDeparture   LogbookEntryType = "departure"
+	EntryTypeReturn      LogbookEntryType = "return"
 	EntryTypeFuel        LogbookEntryType = "fuel"
 	EntryTypeMaintenance LogbookEntryType = "maintenance"
 	EntryTypeGeneral     LogbookEntryType = "general"

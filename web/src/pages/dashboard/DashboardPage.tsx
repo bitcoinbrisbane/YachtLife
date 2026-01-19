@@ -8,6 +8,7 @@ import {
 } from "@mui/icons-material";
 import { useAuth } from "../../context/AuthContext";
 import { useYachts } from "../../hooks/useYachts";
+import { useOwners } from "../../hooks/useOwners";
 
 interface StatCardProps {
 	title: string;
@@ -50,6 +51,7 @@ const StatCard = ({ title, value, icon, color }: StatCardProps) => (
 export const DashboardPage = () => {
 	const { user } = useAuth();
 	const { data: yachts, isLoading } = useYachts();
+	const { data: owners, isLoading: ownersLoading } = useOwners();
 
 	return (
 		<Box>
@@ -79,7 +81,7 @@ export const DashboardPage = () => {
 				/>
 				<StatCard
 					title="Active Owners"
-					value="24"
+					value={ownersLoading ? <CircularProgress size={24} /> : owners?.length || 0}
 					icon={<PeopleIcon sx={{ fontSize: 32 }} />}
 					color="#00ACC1"
 				/>
