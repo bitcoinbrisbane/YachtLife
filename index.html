@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HelmShare - Syndicate Management Platform</title>
+  <style>
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    :root {
+      --color-primary: #1A365D;
+      --color-primary-light: #2D4A6F;
+      --color-accent: #16A085;
+      --color-accent-dark: #128071;
+      --color-surface: #ffffff;
+      --color-surface-alt: #F0F4F8;
+      --color-text: #1A365D;
+      --color-text-muted: #4A6785;
+      --color-border: #CBD5E0;
+      
+      --font-display: Georgia, 'Times New Roman', serif;
+      --font-body: Arial, Helvetica, sans-serif;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--color-text);
+      background: var(--color-surface);
+    }
+    
+    /* Typography */
+    h1, h2, h3, h4 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    
+    h1 { font-size: 3rem; }
+    h2 { font-size: 2.25rem; }
+    h3 { font-size: 1.5rem; }
+    h4 { font-size: 1.125rem; }
+    
+    p { margin-bottom: 1rem; }
+    
+    a {
+      color: var(--color-accent);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    
+    a:hover {
+      color: var(--color-accent-dark);
+    }
+    
+    /* Layout */
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    section {
+      padding: 80px 0;
+    }
+    
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    
+    .btn-primary {
+      background: var(--color-accent);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--color-accent-dark);
+      color: white;
+    }
+    
+    .btn-outline {
+      background: transparent;
+      color: white;
+      border: 2px solid white;
+    }
+    
+    .btn-outline:hover {
+      background: white;
+      color: var(--color-primary);
+    }
+    
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: var(--color-primary);
+      padding: 16px 0;
+    }
+    
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: white;
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--color-accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-accent);
+      font-size: 1.25rem;
+    }
+    
+    nav ul {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+    
+    nav a {
+      color: rgba(255,255,255,0.8);
+      font-size: 0.9rem;
+    }
+    
+    nav a:hover {
+      color: white;
+    }
+    
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+      color: white;
+      padding: 160px 0 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: var(--color-accent);
+    }
+    
+    .hero .container {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .hero-content {
+      max-width: 640px;
+    }
+    
+    .hero-badge {
+      display: inline-block;
+      background: rgba(22, 160, 133, 0.2);
+      color: var(--color-accent);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+    
+    .hero h1 {
+      margin-bottom: 20px;
+    }
+    
+    .hero p {
+      font-size: 1.25rem;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 32px;
+    }
+    
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    /* Problem Section */
+    .problem {
+      background: var(--color-surface);
+    }
+    
+    .section-header {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 48px;
+    }
+    
+    .section-header h2 {
+      margin-bottom: 16px;
+    }
+    
+    .section-header p {
+      color: var(--color-text-muted);
+      font-size: 1.125rem;
+    }
+    
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    
+    .problem-card {
+      background: var(--color-surface-alt);
+      border-radius: 12px;
+      padding: 24px;
+      border-left: 4px solid var(--color-accent);
+    }
+    
+    .problem-card h4 {
+      margin-bottom: 8px;
+    }
+    
+    .problem-card p {
+      color: var(--color-text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+    
+    .problem-card:nth-child(1) { border-left-color: #E53E3E; }
+    .problem-card:nth-child(2) { border-left-color: #DD6B20; }
+    .problem-card:nth-child(3) { border-left-color: #D69E2E; }
+    .problem-card:nth-child(4) { border-left-color: #38A169; }
+    
+    /* Solution Section */
+    .solution {
+      background: var(--color-surface-alt);
+    }
+    
+    .solution-intro {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      color: white;
+      margin-bottom: 48px;
+    }
+    
+    .solution-intro p {
+      font-size: 1.375rem;
+      margin-bottom: 0;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 32px;
+    }
+    
+    .feature-card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    
+    .feature-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 1.75rem;
+    }
+    
+    .feature-card h3 {
+      margin-bottom: 12px;
+    }
+    
+    .feature-card p {
+      color: var(--color-text-muted);
+      margin-bottom: 0;
+    }
+    
+    /* Platform Section */
+    .platform {
+      background: var(--color-surface);
+    }
+    
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 32px;
+    }
+    
+    .platform-column {
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .platform-column-header {
+      padding: 16px 24px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      letter-spacing: 0.5px;
+    }
+    
+    .platform-column:first-child .platform-column-header {
+      background: var(--color-primary);
+      color: var(--color-accent);
+    }
+    
+    .platform-column:last-child .platform-column-header {
+      background: var(--color-accent);
+      color: white;
+    }
+    
+    .platform-column-body {
+      background: var(--color-surface-alt);
+      padding: 24px;
+    }
+    
+    .platform-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .platform-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .platform-item-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    
+    .platform-column:first-child .platform-item-dot {
+      background: var(--color-accent);
+    }
+    
+    .platform-column:last-child .platform-item-dot {
+      background: var(--color-primary);
+    }
+    
+    .platform-item h4 {
+      margin-bottom: 4px;
+    }
+    
+    .platform-item p {
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 0;
+    }
+    
+    /* Pilot Section */
+    .pilot {
+      background: var(--color-surface-alt);
+    }
+    
+    .timeline {
+      display: flex;
+      gap: 0;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 48px;
+    }
+    
+    .timeline-step {
+      flex: 1;
+      padding: 32px 24px;
+      text-align: center;
+      border-right: 1px solid var(--color-border);
+    }
+    
+    .timeline-step:last-child {
+      border-right: none;
+    }
+    
+    .timeline-number {
+      width: 40px;
+      height: 40px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      color: white;
+      font-weight: 700;
+    }
+    
+    .timeline-step:last-child .timeline-number {
+      background: var(--color-primary);
+    }
+    
+    .timeline-step h4 {
+      margin-bottom: 4px;
+    }
+    
+    .timeline-step p {
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 0;
+    }
+    
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    
+    .option-card {
+      border-radius: 12px;
+      padding: 32px;
+    }
+    
+    .option-card:first-child {
+      background: var(--color-primary);
+      color: white;
+    }
+    
+    .option-card:last-child {
+      background: white;
+      border: 2px solid var(--color-accent);
+    }
+    
+    .option-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-accent);
+      margin-bottom: 8px;
+    }
+    
+    .option-card h3 {
+      margin-bottom: 20px;
+    }
+    
+    .option-card ul {
+      list-style: none;
+    }
+    
+    .option-card li {
+      margin-bottom: 10px;
+      padding-left: 24px;
+      position: relative;
+    }
+    
+    .option-card li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--color-accent);
+      font-weight: bold;
+    }
+    
+    .option-card:first-child li {
+      color: rgba(255,255,255,0.85);
+    }
+    
+    .option-card:last-child li {
+      color: var(--color-text-muted);
+    }
+    
+    /* CTA Section */
+    .cta {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+      color: white;
+      text-align: center;
+    }
+    
+    .cta h2 {
+      margin-bottom: 16px;
+    }
+    
+    .cta p {
+      color: rgba(255,255,255,0.8);
+      font-size: 1.125rem;
+      margin-bottom: 32px;
+    }
+    
+    .cta-contact {
+      margin-top: 48px;
+      padding-top: 48px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .cta-contact p {
+      margin-bottom: 8px;
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .cta-contact a {
+      color: var(--color-accent);
+      font-size: 1.25rem;
+    }
+    
+    /* Footer */
+    footer {
+      background: var(--color-primary);
+      color: rgba(255,255,255,0.6);
+      padding: 32px 0;
+      text-align: center;
+      font-size: 0.875rem;
+    }
+    
+    footer .logo {
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 1.25rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      h1 { font-size: 2.25rem; }
+      h2 { font-size: 1.75rem; }
+      
+      section { padding: 60px 0; }
+      
+      nav ul { display: none; }
+      
+      .hero { padding: 120px 0 80px; }
+      
+      .timeline {
+        flex-direction: column;
+      }
+      
+      .timeline-step {
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+      }
+      
+      .timeline-step:last-child {
+        border-bottom: none;
+      }
+      
+      .platform-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class="container">
+      <a href="#" class="logo">
+        <div class="logo-icon">H</div>
+        <span>HELMSHARE</span>
+      </a>
+      <ul>
+        <li><a href="#problem">The Challenge</a></li>
+        <li><a href="#solution">Solution</a></li>
+        <li><a href="#platform">Platform</a></li>
+        <li><a href="#pilot">Pilot Program</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge">Syndicate Management Platform</div>
+        <h1>Run your syndicate like a business, not a spreadsheet</h1>
+        <p>HelmShare automates the back-office operations that consume your time, while delivering a premium branded experience to your owners.</p>
+        <div class="hero-buttons">
+          <a href="#contact" class="btn btn-primary">Get Started</a>
+          <a href="#solution" class="btn btn-outline">Learn More</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem Section -->
+  <section class="problem" id="problem">
+    <div class="container">
+      <div class="section-header">
+        <h2>The Challenge</h2>
+        <p>Syndicate management today is manual, fragmented, and time-consuming. You're spending 10-15 hours per vessel per month on admin instead of growing your business.</p>
+      </div>
+      <div class="problem-grid">
+        <div class="problem-card">
+          <h4>Scheduling Conflicts</h4>
+          <p>Spreadsheets and phone calls to manage fair access. Peak periods become contentious between owners.</p>
+        </div>
+        <div class="problem-card">
+          <h4>Fuel & Expense Tracking</h4>
+          <p>Manual logging of engine hours, fuel usage, and cost allocation per owner after every trip.</p>
+        </div>
+        <div class="problem-card">
+          <h4>Monthly Reconciliation</h4>
+          <p>Hours spent producing owner statements, chasing receipts, and balancing accounts.</p>
+        </div>
+        <div class="problem-card">
+          <h4>Owner Communication</h4>
+          <p>Scattered across email, SMS, and phone calls. No single source of truth for anyone.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solution Section -->
+  <section class="solution" id="solution">
+    <div class="container">
+      <div class="section-header">
+        <h2>The Solution</h2>
+        <p>A modern platform purpose-built for syndicate management companies.</p>
+      </div>
+      <div class="solution-intro">
+        <p>HelmShare automates the back-office operations that consume your time, while delivering a premium branded experience to your owners.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📅</div>
+          <h3>Smart Scheduling</h3>
+          <p>Fair-share algorithms ensure equitable access across all owners. Owners book directly via app with real-time availability.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⛽</div>
+          <h3>Trip Logging</h3>
+          <p>Fuel, engine hours, and expenses captured at trip end. Automatic cost allocation by ownership share.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Automated Reports</h3>
+          <p>Monthly owner statements generated and sent automatically. Full transparency with zero effort.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📄</div>
+          <h3>Invoice via Xero</h3>
+          <p>Seamless Xero integration for automated invoicing. Owner charges flow directly to your accounting.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platform Section -->
+  <section class="platform" id="platform">
+    <div class="container">
+      <div class="section-header">
+        <h2>Platform Features</h2>
+        <p>Everything needed to run a professional syndicate operation.</p>
+      </div>
+      <div class="platform-grid">
+        <div class="platform-column">
+          <div class="platform-column-header">OWNER PORTAL</div>
+          <div class="platform-column-body">
+            <div class="platform-item">
+              <div class="platform-item-dot"></div>
+              <div>
+                <h4>Booking Calendar</h4>
+                <p>Fair-share algorithm with peak/off-peak allocation and standby access</p>
+              </div>
+            </div>
+            <div class="platform-item">
+              <div class="platform-item-dot"></div>
+              <div>
+                <h4>Trip Logging</h4>
+                <p>Quick entry for fuel, engine hours, destinations, and notes</p>
+              </div>
+            </div>
+            <div class="platform-item">
+              <div class="platform-item-dot"></div>
+              <div>
+                <h4>Documents</h4>
+                <p>Insurance, registration, manuals, and agreements in one place</p>
+              </div>
+            </div>
+            <div class="platform-item">
+              <div class="platform-item-dot"></div>
+              <div>
+                <h4>Financial Dashboard</h4>
+                <p>Real-time view of usage, expenses, and account balance</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="platform-column">
+          <div class="platform-column-header">MANAGEMENT DASHBOARD</div>
+          <div class="platform-column-body">
+            <div class="platform-item">
+              <div class="platform-item-dot"></div>
+              <div>
+                <h4>Fleet Overview</h4>
+                <p>All vessels, upcoming bookings, and alerts at a glance</p>
+              </div>
+            </div>
+            <div class="platform-item">
+              <div class="platform-item-dot"></div>
+              <div>
+                <h4>Automated Statements</h4>
+                <p>Monthly owner reports generated and sent automatically</p>
+              </div>
+            </div>
+            <div class="platform-item">
+              <div class="platform-item-dot"></div>
+              <div>
+                <h4>Expense Management</h4>
+                <p>Log costs, attach receipts, allocate by ownership share</p>
+              </div>
+            </div>
+            <div class="platform-item">
+              <div class="platform-item-dot"></div>
+              <div>
+                <h4>Owner Onboarding</h4>
+                <p>Digital signup, document collection, and share setup</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pilot Section -->
+  <section class="pilot" id="pilot">
+    <div class="container">
+      <div class="section-header">
+        <h2>Pilot Program</h2>
+        <p>A low-risk path to prove value before any commitment.</p>
+      </div>
+      <div class="timeline">
+        <div class="timeline-step">
+          <div class="timeline-number">1</div>
+          <h4>Discovery</h4>
+          <p>Week 1-2</p>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-number">2</div>
+          <h4>Build & Brand</h4>
+          <p>Week 3-6</p>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-number">3</div>
+          <h4>Pilot Launch</h4>
+          <p>Month 2-4</p>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-number">4</div>
+          <h4>Decide</h4>
+          <p>Month 5</p>
+        </div>
+      </div>
+      <div class="options-grid">
+        <div class="option-card">
+          <div class="option-label">Option A</div>
+          <h3>Joint Venture (50/50)</h3>
+          <ul>
+            <li>New company jointly owned</li>
+            <li>You bring operations & customers</li>
+            <li>We bring technology & development</li>
+            <li>Revenue share on licensing to others</li>
+          </ul>
+        </div>
+        <div class="option-card">
+          <div class="option-label">Option B</div>
+          <h3>SaaS Subscription</h3>
+          <ul>
+            <li>Monthly per-vessel fee</li>
+            <li>Full white-label branding included</li>
+            <li>Founding customer pricing</li>
+            <li>Priority feature development input</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta" id="contact">
+    <div class="container">
+      <h2>Ready to modernise your syndicate operations?</h2>
+      <p>Let's start with a conversation about your current challenges and see if HelmShare is the right fit.</p>
+      <a href="/cdn-cgi/l/email-protection#8ce0f9efedffcce4e9e0e1ffe4edfee9a2efe3e1" class="btn btn-primary">Schedule a Call</a>
+      <div class="cta-contact">
+        <p>Contact</p>
+        <a href="/cdn-cgi/l/email-protection#375b42545644775f525b5a445f5645521954585a"><span class="__cf_email__" data-cfemail="503c253331231038353c3d23383122357e333f3d">[email&#160;protected]</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="logo">
+        <div
