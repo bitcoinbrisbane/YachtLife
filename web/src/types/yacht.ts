@@ -1,0 +1,30 @@
+export interface Yacht {
+	id: string;
+	name: string;
+	manufacturer: string;
+	model: string;
+	year: number;
+	length_feet: number;
+	beam_feet: number;
+	draft_feet: number;
+	hull_id: string;
+	registration: string;
+	registration_country: string;
+	home_port: string;
+	max_passengers: number;
+	cruising_speed_knots: number;
+	max_speed_knots: number;
+	fuel_capacity_liters: number;
+	water_capacity_liters: number;
+	engine_make: string;
+	engine_model: string;
+	engine_count: number;
+	engine_horsepower: number;
+	engine_hours: number;
+	transmission_type: string;
+	hero_image_url: string;
+	gallery_images: string[] | null;
+	specifications: Record<string, unknown> | null;
+	created_at: string;
+	updated_at: string;
+}

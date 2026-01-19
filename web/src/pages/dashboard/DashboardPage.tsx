@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Typography, Paper } from "@mui/material";
+import { Box, Card, CardContent, Typography, Paper, CircularProgress } from "@mui/material";
 import {
 	DirectionsBoat as BoatIcon,
 	People as PeopleIcon,
@@ -7,10 +7,11 @@ import {
 	TrendingUp as TrendingUpIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../../context/AuthContext";
+import { useYachts } from "../../hooks/useYachts";
 
 interface StatCardProps {
 	title: string;
-	value: string | number;
+	value: string | number | React.ReactNode;
 	icon: React.ReactNode;
 	color: string;
 }
@@ -48,6 +49,7 @@ const StatCard = ({ title, value, icon, color }: StatCardProps) => (
 
 export const DashboardPage = () => {
 	const { user } = useAuth();
+	const { data: yachts, isLoading } = useYachts();
 
 	return (
 		<Box>
@@ -71,7 +73,7 @@ export const DashboardPage = () => {
 			>
 				<StatCard
 					title="Total Vessels"
-					value="3"
+					value={isLoading ? <CircularProgress size={24} /> : yachts?.length || 0}
 					icon={<BoatIcon sx={{ fontSize: 32 }} />}
 					color="#0277BD"
 				/>

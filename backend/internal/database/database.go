@@ -76,33 +76,83 @@ func RunMigrations(db *gorm.DB) error {
 func SeedData(db *gorm.DB) error {
 	log.Println("🌱 Seeding database with test data...")
 
-	// Check if test user already exists
-	var existingUser models.User
-	result := db.Where("email = ?", "skipper@neptunefleet.com").First(&existingUser)
+	// Create admin user for web dashboard
+	var existingAdmin models.User
+	adminResult := db.Where("email = ?", "admin@yachtlife.com").First(&existingAdmin)
 
-	if result.Error == nil {
-		log.Println("✅ Test data already exists, skipping seed")
-		return nil
+	if adminResult.Error != nil {
+		adminUser := models.User{
+			AppleUserID:  "admin-web-dashboard", // Placeholder for web-only admin
+			Email:        "admin@yachtlife.com",
+			PasswordHash: "$2a$10$VhZRWNPg2GRSYDi7iGyJ1.adAtPGsYxUBslgApq4cc6mCIFFeDx8C", // bcrypt hash of "admin123"
+			FirstName:    "Admin",
+			LastName:     "User",
+			Phone:        "+61 400 000 000",
+			Country:      "Australia",
+			Role:         models.RoleAdmin,
+		}
+
+		if err := db.Create(&adminUser).Error; err != nil {
+			return fmt.Errorf("failed to create admin user: %w", err)
+		}
+
+		log.Printf("✅ Created admin user: %s %s (%s)\n", adminUser.FirstName, adminUser.LastName, adminUser.Email)
+		log.Println("📧 Admin credentials: admin@yachtlife.com / admin123")
+	} else {
+		log.Println("✅ Admin user already exists")
+	}
+
+	// Create test manager for web dashboard
+	var existingManager models.User
+	managerResult := db.Where("email = ?", "manager@yachtlife.com").First(&existingManager)
+
+	if managerResult.Error != nil {
+		managerUser := models.User{
+			AppleUserID:  "manager-web-dashboard", // Placeholder for web-only manager
+			Email:        "manager@yachtlife.com",
+			PasswordHash: "$2a$10$VhZRWNPg2GRSYDi7iGyJ1.adAtPGsYxUBslgApq4cc6mCIFFeDx8C", // bcrypt hash of "admin123"
+			FirstName:    "Fleet",
+			LastName:     "Manager",
+			Phone:        "+61 400 000 001",
+			Country:      "Australia",
+			Role:         models.RoleManager,
+		}
+
+		if err := db.Create(&managerUser).Error; err != nil {
+			return fmt.Errorf("failed to create manager user: %w", err)
+		}
+
+		log.Printf("✅ Created manager user: %s %s (%s)\n", managerUser.FirstName, managerUser.LastName, managerUser.Email)
+		log.Println("📧 Manager credentials: manager@yachtlife.com / admin123")
+	} else {
+		log.Println("✅ Manager user already exists")
 	}
 
 	// Create test yacht owner with password "password123" for testing
 	// In production, password would only be set for managers/admins
-	testOwner := models.User{
-		Email:        "skipper@neptunefleet.com",
-		PasswordHash: "$2a$10$mH11p2dydxUv7v8gSnq/CObztVd.VhVYV3fNF1azFJ5QW.DaqIPC6", // bcrypt hash of "password123"
-		FirstName:    "Captain",
-		LastName:     "Jack Sparrow",
-		Phone:        "+61 412 345 678",
-		Country:      "Australia",
-		Role:         models.RoleOwner,
-	}
+	var existingOwner models.User
+	ownerResult := db.Where("email = ?", "skipper@neptunefleet.com").First(&existingOwner)
 
-	if err := db.Create(&testOwner).Error; err != nil {
-		return fmt.Errorf("failed to create test owner: %w", err)
-	}
+	if ownerResult.Error != nil {
+		testOwner := models.User{
+			Email:        "skipper@neptunefleet.com",
+			PasswordHash: "$2a$10$mH11p2dydxUv7v8gSnq/CObztVd.VhVYV3fNF1azFJ5QW.DaqIPC6", // bcrypt hash of "password123"
+			FirstName:    "Captain",
+			LastName:     "Jack Sparrow",
+			Phone:        "+61 412 345 678",
+			Country:      "Australia",
+			Role:         models.RoleOwner,
+		}
 
-	log.Printf("✅ Created test owner: %s %s (%s)\n", testOwner.FirstName, testOwner.LastName, testOwner.Email)
-	log.Println("📧 Test credentials: skipper@neptunefleet.com / password123")
+		if err := db.Create(&testOwner).Error; err != nil {
+			return fmt.Errorf("failed to create test owner: %w", err)
+		}
+
+		log.Printf("✅ Created test owner: %s %s (%s)\n", testOwner.FirstName, testOwner.LastName, testOwner.Email)
+		log.Println("📧 Test credentials: skipper@neptunefleet.com / password123")
+	} else {
+		log.Println("✅ Test owner already exists")
+	}
 
 	// Create Neptune Oceanic Fleet yachts
 	yachts := []models.Yacht{

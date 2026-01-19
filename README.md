@@ -1026,11 +1026,11 @@ We'll build this application in a structured, phased approach. Here's what we'll
 
 ### Build Order Priority
 1. ✅ Architecture & planning (COMPLETED)
-2. 🎯 Project structure & Docker setup (NEXT)
-3. 🎯 Backend foundation & auth
-4. 🎯 Mobile app foundation
-5. 🎯 Web dashboard foundation
-6. 🎯 Vessel & booking features
+2. ✅ Project structure & Docker setup (COMPLETED)
+3. ✅ Backend foundation & auth (COMPLETED)
+4. ✅ Mobile app foundation (iOS scaffolded)
+5. ✅ Web dashboard foundation (COMPLETED - login, dashboard, vessels working)
+6. 🎯 Vessel & booking features (IN PROGRESS - vessel display working)
 7. 🎯 Financial features
 8. 🎯 Logbook & checklists
 9. 🎯 Voting & governance
@@ -1040,23 +1040,31 @@ We'll build this application in a structured, phased approach. Here's what we'll
 
 ### Phase 1: Foundation (Weeks 1-2)
 - [x] Set up project structure (backend, mobile, web)
-- [x] Configure Docker environment (PostgreSQL, MinIO)
+- [x] Configure Docker environment (PostgreSQL 17, MinIO)
 - [x] Initialize Go backend with Gin
-- [ ] Set up database migrations
-- [ ] Implement authentication
-  - [ ] Apple Sign In for mobile
-  - [ ] Email/password for web dashboard
-  - [ ] JWT token management
-  - [ ] Role-based access control middleware
-- [ ] Initialize React Native project (mobile)
-- [ ] Initialize React + Vite project (web dashboard)
-- [ ] Set up API client and state management:
-  - [ ] TanStack Query for server state
-  - [ ] Auth Context for authentication
-  - [ ] MUI theme configuration
+- [x] Set up database migrations (GORM auto-migrate with 13 tables)
+- [x] Implement authentication
+  - [x] Apple Sign In for mobile (backend ready)
+  - [x] Email/password for web dashboard (working with admin/manager users)
+  - [x] JWT token management (bcrypt + JWT with 24h expiration)
+  - [x] Role-based access control middleware
+- [x] Initialize React Native project (mobile)
+- [x] Initialize React + Vite project (web dashboard)
+- [x] Set up API client and state management:
+  - [x] TanStack Query for server state
+  - [x] Auth Context for authentication
+  - [x] MUI theme configuration (maritime colors)
+  - [x] Dashboard layout with sidebar navigation
+  - [x] Protected routes
+  - [x] Login page with form validation
+- [x] Vessel management frontend
+  - [x] Vessels page with real API data
+  - [x] useYachts hook for data fetching
+  - [x] Dashboard showing live vessel count
 
 ### Phase 2: Core Booking System (Weeks 3-4)
-- [ ] Implement yacht management (CRUD)
+- [x] Implement yacht management (READ - API endpoint working)
+- [ ] Implement yacht management (CREATE, UPDATE, DELETE)
 - [ ] Build booking system backend
   - [ ] Create booking
   - [ ] View bookings

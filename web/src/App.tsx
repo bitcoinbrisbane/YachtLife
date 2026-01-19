@@ -7,6 +7,7 @@ import theme from "./theme/theme";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
+import { VesselsPage } from "./pages/vessels/VesselsPage";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 import { Box, CircularProgress } from "@mui/material";
 
@@ -108,7 +109,7 @@ function App() {
 								element={
 									<ProtectedRoute>
 										<DashboardLayout>
-											<Box>Vessels Page - Coming Soon</Box>
+											<VesselsPage />
 										</DashboardLayout>
 									</ProtectedRoute>
 								}
