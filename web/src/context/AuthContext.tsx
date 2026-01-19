@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 import api from "../services/api";
 import type { User, AuthContextType, LoginResponse } from "../types/auth";
@@ -10,21 +10,17 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-	const [user, setUser] = useState<User | null>(null);
-	const [token, setToken] = useState<string | null>(null);
-	const [loading, setLoading] = useState(true);
-
-	// Load user from localStorage on mount
-	useEffect(() => {
-		const storedToken = localStorage.getItem("auth_token");
+	// Load user from localStorage on initialization
+	const [user, setUser] = useState<User | null>(() => {
 		const storedUser = localStorage.getItem("user");
+		return storedUser ? JSON.parse(storedUser) : null;
+	});
 
-		if (storedToken && storedUser) {
-			setToken(storedToken);
-			setUser(JSON.parse(storedUser));
-		}
-		setLoading(false);
-	}, []);
+	const [token, setToken] = useState<string | null>(() => {
+		return localStorage.getItem("auth_token");
+	});
+
+	const [loading] = useState(false);
 
 	const login = async (email: string, password: string) => {
 		try {
@@ -71,6 +67,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 };
 
 // Custom hook to use auth context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
 	const context = useContext(AuthContext);
 	if (context === undefined) {

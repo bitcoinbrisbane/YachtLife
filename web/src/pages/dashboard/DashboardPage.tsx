@@ -111,8 +111,8 @@ export const DashboardPage = () => {
 						Recent Activity
 					</Typography>
 					<Typography color="text.secondary" variant="body2">
-						Activity feed will be displayed here showing recent bookings, payments, and
-						maintenance updates.
+						Activity feed will be displayed here showing recent bookings, payments, and maintenance
+						updates.
 					</Typography>
 					<Box sx={{ mt: 3, textAlign: "center", py: 4 }}>
 						<TrendingUpIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />

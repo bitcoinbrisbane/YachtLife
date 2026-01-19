@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-	Box,
-	Card,
-	CardContent,
-	TextField,
-	Button,
-	Typography,
-	Alert,
-} from "@mui/material";
+import { Box, Card, CardContent, TextField, Button, Typography, Alert } from "@mui/material";
 import { DirectionsBoat as BoatIcon } from "@mui/icons-material";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -33,7 +25,7 @@ export const LoginPage = () => {
 			setError("");
 			await login(data.email, data.password);
 			navigate("/dashboard");
-		} catch (err) {
+		} catch {
 			setError("Invalid email or password. Please try again.");
 		}
 	};

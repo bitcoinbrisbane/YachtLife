@@ -150,7 +150,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 					>
 						<MenuIcon />
 					</IconButton>
-					<Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, color: "text.primary" }}>
+					<Typography
+						variant="h6"
+						noWrap
+						component="div"
+						sx={{ flexGrow: 1, color: "text.primary" }}
+					>
 						Yacht Syndicate Management
 					</Typography>
 					<IconButton onClick={handleMenuOpen} sx={{ ml: 2 }}>
