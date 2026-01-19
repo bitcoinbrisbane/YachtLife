@@ -2,9 +2,13 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import theme from "./theme/theme";
-import { Box, Typography, Button, Card, CardContent } from "@mui/material";
-import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { LoginPage } from "./pages/auth/LoginPage";
+import { DashboardPage } from "./pages/dashboard/DashboardPage";
+import { DashboardLayout } from "./layouts/DashboardLayout";
+import { Box, CircularProgress } from "@mui/material";
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -16,48 +20,188 @@ const queryClient = new QueryClient({
 	},
 });
 
+// Protected Route wrapper
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+	const { isAuthenticated, loading } = useAuth();
+
+	if (loading) {
+		return (
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "center",
+					alignItems: "center",
+					minHeight: "100vh",
+				}}
+			>
+				<CircularProgress />
+			</Box>
+		);
+	}
+
+	if (!isAuthenticated) {
+		return <Navigate to="/login" replace />;
+	}
+
+	return <>{children}</>;
+};
+
+// Public Route wrapper (redirect to dashboard if already logged in)
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+	const { isAuthenticated, loading } = useAuth();
+
+	if (loading) {
+		return (
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "center",
+					alignItems: "center",
+					minHeight: "100vh",
+				}}
+			>
+				<CircularProgress />
+			</Box>
+		);
+	}
+
+	if (isAuthenticated) {
+		return <Navigate to="/dashboard" replace />;
+	}
+
+	return <>{children}</>;
+};
+
 function App() {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<ThemeProvider theme={theme}>
 				<CssBaseline />
-				<Box
-					sx={{
-						minHeight: "100vh",
-						background: "linear-gradient(135deg, #0277BD 0%, #00ACC1 100%)",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						p: 2,
-					}}
-				>
-					<Card sx={{ maxWidth: 600, width: "100%", textAlign: "center" }}>
-						<CardContent sx={{ p: 6 }}>
-							<DirectionsBoatIcon sx={{ fontSize: 80, color: "primary.main", mb: 2 }} />
-							<Typography variant="h2" gutterBottom>
-								YachtLife
-							</Typography>
-							<Typography variant="h5" color="text.secondary" gutterBottom>
-								Yacht Syndicate Management
-							</Typography>
-							<Typography variant="body1" color="text.secondary" sx={{ mt: 3, mb: 4 }}>
-								A comprehensive platform for managing yacht ownership, bookings,
-								maintenance, and financial operations.
-							</Typography>
-							<Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
-								<Button variant="contained" size="large">
-									Get Started
-								</Button>
-								<Button variant="outlined" size="large">
-									Learn More
-								</Button>
-							</Box>
-							<Typography variant="caption" color="text.secondary" sx={{ mt: 4, display: "block" }}>
-								Management Dashboard • Coming Soon
-							</Typography>
-						</CardContent>
-					</Card>
-				</Box>
+				<BrowserRouter>
+					<AuthProvider>
+						<Routes>
+							{/* Public routes */}
+							<Route
+								path="/login"
+								element={
+									<PublicRoute>
+										<LoginPage />
+									</PublicRoute>
+								}
+							/>
+
+							{/* Protected routes */}
+							<Route
+								path="/dashboard"
+								element={
+									<ProtectedRoute>
+										<DashboardLayout>
+											<DashboardPage />
+										</DashboardLayout>
+									</ProtectedRoute>
+								}
+							/>
+
+							{/* Placeholder routes for other pages */}
+							<Route
+								path="/vessels"
+								element={
+									<ProtectedRoute>
+										<DashboardLayout>
+											<Box>Vessels Page - Coming Soon</Box>
+										</DashboardLayout>
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/owners"
+								element={
+									<ProtectedRoute>
+										<DashboardLayout>
+											<Box>Owners Page - Coming Soon</Box>
+										</DashboardLayout>
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/bookings"
+								element={
+									<ProtectedRoute>
+										<DashboardLayout>
+											<Box>Bookings Page - Coming Soon</Box>
+										</DashboardLayout>
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/financial"
+								element={
+									<ProtectedRoute>
+										<DashboardLayout>
+											<Box>Financial Page - Coming Soon</Box>
+										</DashboardLayout>
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/maintenance"
+								element={
+									<ProtectedRoute>
+										<DashboardLayout>
+											<Box>Maintenance Page - Coming Soon</Box>
+										</DashboardLayout>
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/voting"
+								element={
+									<ProtectedRoute>
+										<DashboardLayout>
+											<Box>Voting Page - Coming Soon</Box>
+										</DashboardLayout>
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/reports"
+								element={
+									<ProtectedRoute>
+										<DashboardLayout>
+											<Box>Reports Page - Coming Soon</Box>
+										</DashboardLayout>
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/notifications"
+								element={
+									<ProtectedRoute>
+										<DashboardLayout>
+											<Box>Notifications Page - Coming Soon</Box>
+										</DashboardLayout>
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/settings"
+								element={
+									<ProtectedRoute>
+										<DashboardLayout>
+											<Box>Settings Page - Coming Soon</Box>
+										</DashboardLayout>
+									</ProtectedRoute>
+								}
+							/>
+
+							{/* Default redirect */}
+							<Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+							{/* 404 redirect */}
+							<Route path="*" element={<Navigate to="/dashboard" replace />} />
+						</Routes>
+					</AuthProvider>
+				</BrowserRouter>
 				<ReactQueryDevtools initialIsOpen={false} />
 			</ThemeProvider>
 		</QueryClientProvider>
