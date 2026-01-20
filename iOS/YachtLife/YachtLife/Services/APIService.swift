@@ -183,6 +183,12 @@ class APIService {
         return response.activities
     }
 
+    // MARK: - Dashboard
+    func getDashboard(yachtId: UUID) async throws -> DashboardViewModel {
+        let endpoint = "/dashboard?yacht_id=\(yachtId)"
+        return try await request(endpoint: endpoint)
+    }
+
     // MARK: - Logbook
     func getLogbookEntries(yachtId: UUID? = nil, bookingId: UUID? = nil) async throws -> [LogbookEntry] {
         var endpoint = "/logbook"
