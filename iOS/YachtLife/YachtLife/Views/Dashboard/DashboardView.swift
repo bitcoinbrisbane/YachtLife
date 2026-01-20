@@ -3,15 +3,9 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject var authViewModel: AuthenticationViewModel
     @State private var showingLogEntry = false
-    @State private var bookings: [Booking] = []
-    @State private var isLoadingBookings = false
-    @State private var bookingsError: String?
-    @State private var latestLogEntry: LogbookEntry?
-    @State private var isLoadingLogEntry = false
-    @State private var recentActivities: [Activity] = []
-    @State private var isLoadingActivities = false
-    @State private var activeBooking: Booking?
-    @State private var hasDepartureLog = false
+    @State private var dashboardData: DashboardViewModel?
+    @State private var isLoading = false
+    @State private var errorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -22,31 +16,33 @@ struct DashboardView: View {
                         HeroSection(yacht: yacht, userName: authViewModel.currentUser?.fullName ?? "Owner")
 
                         // Stats Grid
-                        StatsGrid(
-                            showingLogEntry: $showingLogEntry,
-                            latestLogEntry: latestLogEntry,
-                            buttonText: logButtonText
-                        )
-                        .padding(.horizontal)
-                        .padding(.top, 20)
+                        if let data = dashboardData {
+                            StatsGrid(
+                                showingLogEntry: $showingLogEntry,
+                                portEngineHours: data.portEngineHours,
+                                starboardEngineHours: data.starboardEngineHours,
+                                fuelLiters: data.fuelLiters,
+                                buttonText: logButtonText(data: data)
+                            )
+                            .padding(.horizontal)
+                            .padding(.top, 20)
 
-                        // Upcoming Bookings
-                        if isLoadingBookings {
-                            ProgressView("Loading bookings...")
+                            // Upcoming Bookings
+                            UpcomingBookingsSection(bookings: data.upcomingBookings)
+                                .padding(.top, 25)
+
+                            // Recent Activity
+                            RecentActivitySection(activities: data.recentActivities, isLoading: false)
+                                .padding(.top, 25)
+                                .padding(.bottom, 20)
+                        } else if isLoading {
+                            ProgressView("Loading...")
                                 .padding()
-                        } else if let error = bookingsError {
-                            Text("Error loading bookings: \(error)")
+                        } else if let error = errorMessage {
+                            Text("Error: \(error)")
                                 .foregroundColor(.red)
                                 .padding()
-                        } else {
-                            UpcomingBookingsSection(bookings: bookings)
-                                .padding(.top, 25)
                         }
-
-                        // Recent Activity
-                        RecentActivitySection(activities: recentActivities, isLoading: isLoadingActivities)
-                            .padding(.top, 25)
-                            .padding(.bottom, 20)
                     }
                 }
                 .ignoresSafeArea(edges: .top)
@@ -54,9 +50,9 @@ struct DashboardView: View {
                 .sheet(isPresented: $showingLogEntry) {
                     CreateLogEntryView(
                         yachtID: yacht.id,
-                        portEngineHours: String(format: "%.1f", latestLogEntry?.portEngineHours ?? 1247.5),
-                        starboardEngineHours: String(format: "%.1f", latestLogEntry?.starboardEngineHours ?? 1248.2),
-                        fuelLevel: String(format: "%.0f", latestLogEntry?.fuelLiters ?? 2550)
+                        portEngineHours: String(format: "%.1f", dashboardData?.portEngineHours ?? 0),
+                        starboardEngineHours: String(format: "%.1f", dashboardData?.starboardEngineHours ?? 0),
+                        fuelLevel: String(format: "%.0f", dashboardData?.fuelLiters ?? 0)
                     )
                 }
             } else {
@@ -100,123 +96,35 @@ struct DashboardView: View {
 
     private func loadYachtData() {
         // Only load data if we have a selected yacht
-        guard authViewModel.selectedYacht != nil else {
+        guard let yacht = authViewModel.selectedYacht else {
             print("⚠️ No selected yacht - skipping data load")
             return
         }
 
+        isLoading = true
+        errorMessage = nil
+
         Task {
-            await loadBookings()
-            await loadLatestLogEntry()
-            await loadRecentActivity()
-            await checkBookingLogStatus()
+            do {
+                dashboardData = try await APIService.shared.getDashboard(yachtId: yacht.id)
+                print("✅ Loaded dashboard data for \(yacht.name)")
+            } catch {
+                errorMessage = error.localizedDescription
+                print("❌ Error loading dashboard: \(error)")
+            }
+            isLoading = false
         }
     }
 
-    private var logButtonText: String {
-        if let _ = activeBooking {
-            if !hasDepartureLog {
+    private func logButtonText(data: DashboardViewModel) -> String {
+        if data.activeBooking != nil {
+            if !data.hasDepartureLog {
                 return "Create Departure Log"
             } else {
                 return "Create Return Log"
             }
         }
         return "Create Trip Log"
-    }
-
-    private func checkBookingLogStatus() async {
-        guard let yacht = authViewModel.selectedYacht,
-              let user = authViewModel.currentUser else {
-            print("⚠️ No yacht or user - cannot check booking status")
-            return
-        }
-
-        do {
-            // Get bookings for this yacht and user
-            let allBookings = try await APIService.shared.getBookings(yachtId: yacht.id)
-
-            // Find active booking (current date within start/end date and confirmed/in_progress status)
-            let now = Date()
-            activeBooking = allBookings.first { booking in
-                booking.startDate <= now &&
-                booking.endDate >= now &&
-                booking.userId == user.id &&
-                (booking.status == .confirmed || booking.status == .inProgress)
-            }
-
-            // If we have an active booking, check for departure log
-            if let booking = activeBooking {
-                let logs = try await APIService.shared.getLogbookEntries(bookingId: booking.id)
-                hasDepartureLog = logs.contains { $0.entryType == .depart }
-                print("✅ Active booking found. Has departure log: \(hasDepartureLog)")
-            } else {
-                hasDepartureLog = false
-                print("ℹ️ No active booking found for current user")
-            }
-        } catch {
-            print("❌ Error checking booking/log status: \(error)")
-            activeBooking = nil
-            hasDepartureLog = false
-        }
-    }
-
-    private func loadRecentActivity() async {
-        guard let yacht = authViewModel.selectedYacht else {
-            print("⚠️ No yacht selected - cannot load activities")
-            return
-        }
-
-        isLoadingActivities = true
-
-        do {
-            recentActivities = try await APIService.shared.getRecentActivity(yachtId: yacht.id)
-            print("✅ Loaded \(recentActivities.count) recent activities for \(yacht.name)")
-        } catch {
-            print("❌ Error loading activities: \(error)")
-            // Keep empty list on error
-        }
-
-        isLoadingActivities = false
-    }
-
-    private func loadBookings() async {
-        guard let yacht = authViewModel.selectedYacht else {
-            print("⚠️ No yacht selected - cannot load bookings")
-            return
-        }
-
-        isLoadingBookings = true
-        bookingsError = nil
-
-        do {
-            bookings = try await APIService.shared.getBookings(yachtId: yacht.id)
-            print("✅ Loaded \(bookings.count) bookings for \(yacht.name)")
-        } catch {
-            bookingsError = error.localizedDescription
-            print("❌ Error loading bookings: \(error)")
-        }
-
-        isLoadingBookings = false
-    }
-
-    private func loadLatestLogEntry() async {
-        guard let yacht = authViewModel.selectedYacht else {
-            print("⚠️ No yacht selected - cannot load log entry")
-            return
-        }
-
-        isLoadingLogEntry = true
-
-        do {
-            let entries = try await APIService.shared.getLogbookEntries(yachtId: yacht.id)
-            latestLogEntry = entries.first // API returns ordered by created_at DESC
-            print("✅ Loaded latest log entry for \(yacht.name)")
-        } catch {
-            print("❌ Error loading latest log entry: \(error)")
-            // Keep using default values if API fails
-        }
-
-        isLoadingLogEntry = false
     }
 }
 
@@ -305,7 +213,9 @@ struct HeroSection: View {
 // MARK: - Stats Grid
 struct StatsGrid: View {
     @Binding var showingLogEntry: Bool
-    let latestLogEntry: LogbookEntry?
+    let portEngineHours: Double
+    let starboardEngineHours: Double
+    let fuelLiters: Double
     let buttonText: String
 
     var body: some View {
@@ -316,14 +226,14 @@ struct StatsGrid: View {
             ], spacing: 15) {
                 StatCard(
                     icon: "gauge.high",
-                    value: String(format: "%.1f", latestLogEntry?.portEngineHours ?? 1247.5),
+                    value: String(format: "%.1f", portEngineHours),
                     label: "Port Engine",
                     color: .blue
                 )
 
                 StatCard(
                     icon: "gauge.high",
-                    value: String(format: "%.1f", latestLogEntry?.starboardEngineHours ?? 1248.2),
+                    value: String(format: "%.1f", starboardEngineHours),
                     label: "Starboard Engine",
                     color: .blue
                 )
@@ -331,7 +241,7 @@ struct StatsGrid: View {
 
             StatCard(
                 icon: "fuelpump.fill",
-                value: String(format: "%.0fL", latestLogEntry?.fuelLiters ?? 2550),
+                value: String(format: "%.0fL", fuelLiters),
                 label: "Current Fuel",
                 color: .green
             )
@@ -385,7 +295,7 @@ struct StatCard: View {
 
 // MARK: - Upcoming Bookings Section
 struct UpcomingBookingsSection: View {
-    let bookings: [Booking]
+    let bookings: [BookingInfo]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
@@ -393,15 +303,23 @@ struct UpcomingBookingsSection: View {
                 .font(.headline)
                 .padding(.horizontal)
 
-            ForEach(bookings) { booking in
-                BookingCard(booking: booking)
+            if bookings.isEmpty {
+                Text("No upcoming bookings")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else {
+                ForEach(bookings) { booking in
+                    BookingCard(booking: booking)
+                }
             }
         }
     }
 }
 
 struct BookingCard: View {
-    let booking: Booking
+    let booking: BookingInfo
 
     var body: some View {
         HStack(spacing: 15) {
@@ -443,7 +361,7 @@ struct BookingCard: View {
                         Image(systemName: "circle.fill")
                             .font(.system(size: 6))
                             .foregroundColor(statusColor(booking.status))
-                        Text(booking.status.rawValue.capitalized)
+                        Text(booking.status.capitalized)
                             .foregroundColor(statusColor(booking.status))
                     }
                     .font(.caption)
@@ -468,13 +386,14 @@ struct BookingCard: View {
         .padding(.horizontal)
     }
 
-    private func statusColor(_ status: Booking.BookingStatus) -> Color {
-        switch status {
-        case .confirmed: return .green
-        case .pending: return .orange
-        case .inProgress: return .blue
-        case .completed: return .gray
-        case .cancelled: return .red
+    private func statusColor(_ status: String) -> Color {
+        switch status.lowercased() {
+        case "confirmed": return .green
+        case "pending": return .orange
+        case "in_progress": return .blue
+        case "completed": return .gray
+        case "cancelled": return .red
+        default: return .gray
         }
     }
 
@@ -487,7 +406,7 @@ struct BookingCard: View {
 
 // MARK: - Recent Activity Section
 struct RecentActivitySection: View {
-    let activities: [Activity]
+    let activities: [ActivityInfo]
     let isLoading: Bool
 
     var body: some View {
