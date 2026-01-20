@@ -15,6 +15,25 @@ struct User: Codable, Identifiable {
         case admin
         case manager
         case owner
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let roleString = try container.decode(String.self)
+
+            // Handle empty string as default "owner" role
+            if roleString.isEmpty {
+                self = .owner
+                return
+            }
+
+            // Try to decode from the string value
+            if let role = UserRole(rawValue: roleString) {
+                self = role
+            } else {
+                // If invalid role, default to owner
+                self = .owner
+            }
+        }
     }
 
     enum CodingKeys: String, CodingKey {
