@@ -126,6 +126,7 @@ struct InvoicesView: View {
     private func loadInvoices() async {
         guard let yacht = authViewModel.selectedYacht else {
             print("⚠️ No selected yacht - skipping invoice load")
+            isLoading = false
             return
         }
 
@@ -344,21 +345,21 @@ struct InvoiceDetailView: View {
                         LabeledContent("Invoice Number", value: invoice.xeroInvoiceId ?? "N/A")
                         LabeledContent("Amount", value: String(format: "$%.2f", invoice.amount))
                         LabeledContent("Due Date", value: invoice.dueDate, format: .dateTime)
-                        LabeledContent("Issued Date", value: invoice.issuedDate, format: .dateTime)
-                        LabeledContent("Status", value: invoice.status.capitalized)
+                        LabeledContent("Issued Date", value: invoice.createdAt, format: .dateTime)
+                        LabeledContent("Status", value: invoice.status.rawValue.capitalized)
                     }
 
                     Section("Description") {
                         Text(invoice.description)
                     }
 
-                    if let paidDate = invoice.paidDate {
+                    if let paidAt = invoice.paidAt {
                         Section("Payment") {
-                            LabeledContent("Paid Date", value: paidDate, format: .dateTime)
+                            LabeledContent("Paid Date", value: paidAt, format: .dateTime)
                         }
                     }
 
-                    if invoice.status != "paid" {
+                    if invoice.status != .paid {
                         Section {
                             Button("Pay with Apple Pay") {
                                 // TODO: Implement Apple Pay
