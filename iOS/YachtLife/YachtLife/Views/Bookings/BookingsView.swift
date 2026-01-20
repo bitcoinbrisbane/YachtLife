@@ -75,6 +75,8 @@ struct BookingListRow: View {
 
 struct BookingDetailView: View {
     let booking: Booking
+    @State private var logbookEntries: [LogbookEntry] = []
+    @State private var isLoadingLogs = true
 
     var body: some View {
         List {
@@ -100,6 +102,32 @@ struct BookingDetailView: View {
                 }
             }
 
+            if !logbookEntries.isEmpty {
+                Section("Fuel Details") {
+                    if let departureLog = logbookEntries.first(where: { $0.entryType == .departure }) {
+                        LabeledContent("Fuel Start") {
+                            if let fuelLiters = departureLog.fuelLiters {
+                                Text("\(Int(fuelLiters))L")
+                            } else {
+                                Text("N/A")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+
+                    if let returnLog = logbookEntries.first(where: { $0.entryType == .return }) {
+                        LabeledContent("Fuel Finish") {
+                            if let fuelLiters = returnLog.fuelLiters {
+                                Text("\(Int(fuelLiters))L")
+                            } else {
+                                Text("N/A")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+
             if let notes = booking.notes {
                 Section("Notes") {
                     Text(notes)
@@ -107,6 +135,20 @@ struct BookingDetailView: View {
             }
         }
         .navigationTitle("Booking Details")
+        .task {
+            await loadLogbookEntries()
+        }
+    }
+
+    private func loadLogbookEntries() async {
+        isLoadingLogs = true
+        do {
+            logbookEntries = try await APIService.shared.getLogbookEntries(bookingId: booking.id)
+            print("✅ Loaded \(logbookEntries.count) logbook entries for booking")
+        } catch {
+            print("❌ Error loading logbook entries: \(error)")
+        }
+        isLoadingLogs = false
     }
 
     private func statusColor(_ status: Booking.BookingStatus) -> Color {

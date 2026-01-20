@@ -29,7 +29,7 @@ struct CreateLogEntryView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Engine Hours") {
+                Section {
                     HStack {
                         Image(systemName: "gauge.high")
                             .foregroundColor(.blue)
@@ -57,9 +57,11 @@ struct CreateLogEntryView: View {
                                 .keyboardType(.decimalPad)
                         }
                     }
+                } header: {
+                    Text("Engine Hours")
                 }
 
-                Section("Fuel") {
+                Section {
                     HStack {
                         Image(systemName: "fuelpump.fill")
                             .foregroundColor(.green)
@@ -68,14 +70,19 @@ struct CreateLogEntryView: View {
                         TextField("Fuel Level (Litres)", text: $fuelLevel)
                             .keyboardType(.decimalPad)
                     }
+                } header: {
+                    Text("Fuel Level")
+                } footer: {
+                    Text("The system will automatically determine if this is a departure or return log based on your booking.")
+                        .font(.caption)
                 }
 
-                Section("Notes") {
+                Section("Notes (Optional)") {
                     TextEditor(text: $notes)
                         .frame(minHeight: 100)
                 }
             }
-            .navigationTitle("Create Log Entry")
+            .navigationTitle("Trip Log Entry")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -110,33 +117,27 @@ struct CreateLogEntryView: View {
         errorMessage = nil
 
         do {
-            // Calculate average engine hours and hours operated
             guard let portHours = Double(portEngineHours),
                   let starboardHours = Double(starboardEngineHours),
-                  let fuelLit = Double(fuelLevel),
-                  let prevPortHours = Double(currentPortEngineHours),
-                  let prevStarboardHours = Double(currentStarboardEngineHours) else {
+                  let fuelLit = Double(fuelLevel) else {
                 errorMessage = "Please enter valid numbers"
                 isSaving = false
                 return
             }
 
-            let hoursOperated = ((portHours - prevPortHours) + (starboardHours - prevStarboardHours)) / 2
-
             let request = CreateLogbookEntryRequest(
                 yachtID: yachtID,
-                entryType: .general,
+                portEngineHours: portHours,
+                starboardEngineHours: starboardHours,
                 fuelLiters: fuelLit,
-                fuelCost: nil,
-                hoursOperated: hoursOperated > 0 ? hoursOperated : nil,
                 notes: notes.isEmpty ? nil : notes
             )
 
             _ = try await APIService.shared.createLogbookEntry(request)
-            print("✅ Log entry saved successfully")
+            print("✅ Trip log entry saved successfully")
             dismiss()
         } catch {
-            print("❌ Error saving log entry: \(error)")
+            print("❌ Error saving trip log entry: \(error)")
             errorMessage = error.localizedDescription
         }
 

@@ -6,93 +6,141 @@ struct DashboardView: View {
     @State private var bookings: [Booking] = []
     @State private var isLoadingBookings = false
     @State private var bookingsError: String?
-
-    // Mock Neptune Oceanic Fleet yacht
-    private let mockYacht = Yacht(
-        id: UUID(uuidString: "e98b59ac-bdac-4513-9ddd-f032d3aa39f7")!,
-        name: "Neptune's Pride",
-        model: "Riviera 72 Sports Motor Yacht",
-        manufacturer: "Riviera",
-        year: 2022,
-        lengthFeet: 72.0,
-        beamFeet: 19.5,
-        draftFeet: 5.2,
-        hullId: "RIV72-2022-NPF001",
-        homePort: "Gold Coast Marina",
-        maxPassengers: 12,
-        fuelCapacityLiters: 3000,
-        waterCapacityLiters: 500,
-        engineMake: "Volvo Penta",
-        engineModel: "IPS 1200",
-        engineCount: 2,
-        engineHorsepower: 900,
-        heroImageUrl: nil,
-        createdAt: nil,
-        updatedAt: nil
-    )
+    @State private var latestLogEntry: LogbookEntry?
+    @State private var isLoadingLogEntry = false
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Hero Section
-                    HeroSection(yacht: mockYacht, userName: authViewModel.currentUser?.fullName ?? "Owner")
+            if let yacht = authViewModel.selectedYacht {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Hero Section
+                        HeroSection(yacht: yacht, userName: authViewModel.currentUser?.fullName ?? "Owner")
 
-                    // Stats Grid
-                    StatsGrid(showingLogEntry: $showingLogEntry)
-                        .padding(.horizontal)
-                        .padding(.top, 20)
+                        // Stats Grid
+                        StatsGrid(showingLogEntry: $showingLogEntry, latestLogEntry: latestLogEntry)
+                            .padding(.horizontal)
+                            .padding(.top, 20)
 
-                    // Upcoming Bookings
-                    if isLoadingBookings {
-                        ProgressView("Loading bookings...")
-                            .padding()
-                    } else if let error = bookingsError {
-                        Text("Error loading bookings: \(error)")
-                            .foregroundColor(.red)
-                            .padding()
-                    } else {
-                        UpcomingBookingsSection(bookings: bookings)
+                        // Upcoming Bookings
+                        if isLoadingBookings {
+                            ProgressView("Loading bookings...")
+                                .padding()
+                        } else if let error = bookingsError {
+                            Text("Error loading bookings: \(error)")
+                                .foregroundColor(.red)
+                                .padding()
+                        } else {
+                            UpcomingBookingsSection(bookings: bookings)
+                                .padding(.top, 25)
+                        }
+
+                        // Recent Activity
+                        RecentActivitySection()
                             .padding(.top, 25)
+                            .padding(.bottom, 20)
                     }
-
-                    // Recent Activity
-                    RecentActivitySection()
-                        .padding(.top, 25)
-                        .padding(.bottom, 20)
                 }
+                .ignoresSafeArea(edges: .top)
+                .navigationBarHidden(true)
+                .sheet(isPresented: $showingLogEntry) {
+                    CreateLogEntryView(
+                        yachtID: yacht.id,
+                        portEngineHours: String(format: "%.1f", latestLogEntry?.portEngineHours ?? 1247.5),
+                        starboardEngineHours: String(format: "%.1f", latestLogEntry?.starboardEngineHours ?? 1248.2),
+                        fuelLevel: String(format: "%.0f", latestLogEntry?.fuelLiters ?? 2550)
+                    )
+                }
+            } else {
+                VStack(spacing: 20) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 60))
+                        .foregroundColor(.orange)
+
+                    Text("No Vessel Selected")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+
+                    Text("Please log out and select a vessel")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+
+                    Button {
+                        authViewModel.logout()
+                    } label: {
+                        Text("Log Out")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
+                    .padding(.horizontal, 40)
+                    .padding(.top, 20)
+                }
+                .padding()
             }
-            .ignoresSafeArea(edges: .top)
-            .navigationBarHidden(true)
-            .onAppear {
-                loadBookings()
-            }
-            .sheet(isPresented: $showingLogEntry) {
-                CreateLogEntryView(
-                    yachtID: mockYacht.id,
-                    portEngineHours: "1247.5",
-                    starboardEngineHours: "1248.2",
-                    fuelLevel: "2550"
-                )
-            }
+        }
+        .onAppear {
+            // Load yacht-related data when the view appears
+            loadYachtData()
         }
     }
 
-    private func loadBookings() {
-        Task {
-            isLoadingBookings = true
-            bookingsError = nil
-
-            do {
-                bookings = try await APIService.shared.getBookings(yachtId: mockYacht.id)
-                print("✅ Loaded \(bookings.count) bookings")
-            } catch {
-                bookingsError = error.localizedDescription
-                print("❌ Error loading bookings: \(error)")
-            }
-
-            isLoadingBookings = false
+    private func loadYachtData() {
+        // Only load data if we have a selected yacht
+        guard authViewModel.selectedYacht != nil else {
+            print("⚠️ No selected yacht - skipping data load")
+            return
         }
+
+        Task {
+            await loadBookings()
+            await loadLatestLogEntry()
+        }
+    }
+
+    private func loadBookings() async {
+        guard let yacht = authViewModel.selectedYacht else {
+            print("⚠️ No yacht selected - cannot load bookings")
+            return
+        }
+
+        isLoadingBookings = true
+        bookingsError = nil
+
+        do {
+            bookings = try await APIService.shared.getBookings(yachtId: yacht.id)
+            print("✅ Loaded \(bookings.count) bookings for \(yacht.name)")
+        } catch {
+            bookingsError = error.localizedDescription
+            print("❌ Error loading bookings: \(error)")
+        }
+
+        isLoadingBookings = false
+    }
+
+    private func loadLatestLogEntry() async {
+        guard let yacht = authViewModel.selectedYacht else {
+            print("⚠️ No yacht selected - cannot load log entry")
+            return
+        }
+
+        isLoadingLogEntry = true
+
+        do {
+            let entries = try await APIService.shared.getLogbookEntries(yachtId: yacht.id)
+            latestLogEntry = entries.first // API returns ordered by created_at DESC
+            print("✅ Loaded latest log entry for \(yacht.name)")
+        } catch {
+            print("❌ Error loading latest log entry: \(error)")
+            // Keep using default values if API fails
+        }
+
+        isLoadingLogEntry = false
     }
 }
 
@@ -181,6 +229,7 @@ struct HeroSection: View {
 // MARK: - Stats Grid
 struct StatsGrid: View {
     @Binding var showingLogEntry: Bool
+    let latestLogEntry: LogbookEntry?
 
     var body: some View {
         VStack(spacing: 15) {
@@ -190,37 +239,33 @@ struct StatsGrid: View {
             ], spacing: 15) {
                 StatCard(
                     icon: "gauge.high",
-                    value: "1,247.5",
+                    value: String(format: "%.1f", latestLogEntry?.portEngineHours ?? 1247.5),
                     label: "Port Engine",
                     color: .blue
                 )
 
                 StatCard(
                     icon: "gauge.high",
-                    value: "1,248.2",
+                    value: String(format: "%.1f", latestLogEntry?.starboardEngineHours ?? 1248.2),
                     label: "Starboard Engine",
                     color: .blue
                 )
             }
 
-            LazyVGrid(columns: [
-                GridItem(.flexible())
-            ], spacing: 15) {
-                StatCard(
-                    icon: "fuelpump.fill",
-                    value: "2,550L",
-                    label: "Starting Fuel",
-                    color: .green
-                )
-            }
+            StatCard(
+                icon: "fuelpump.fill",
+                value: String(format: "%.0fL", latestLogEntry?.fuelLiters ?? 2550),
+                label: "Current Fuel",
+                color: .green
+            )
 
-            // Create Log Entry Button
+            // Create Trip Log Button
             Button {
                 showingLogEntry = true
             } label: {
                 HStack {
                     Image(systemName: "plus.circle.fill")
-                    Text("Create Log Entry")
+                    Text("Create Trip Log")
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)

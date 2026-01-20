@@ -8,8 +8,16 @@ struct Booking: Codable, Identifiable {
     let endDate: Date
     let standbyDays: Int
     let status: BookingStatus
+    let bookingType: String?
+    let isStandby: Bool?
     let notes: String?
+    let cancelledAt: Date?
     let createdAt: Date
+    let updatedAt: Date?
+
+    // Nested objects (optional, will be ignored if not needed)
+    let yacht: Yacht?
+    let user: User?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -19,8 +27,14 @@ struct Booking: Codable, Identifiable {
         case endDate = "end_date"
         case standbyDays = "standby_days"
         case status
+        case bookingType = "booking_type"
+        case isStandby = "is_standby"
         case notes
+        case cancelledAt = "cancelled_at"
         case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case yacht
+        case user
     }
 
     enum BookingStatus: String, Codable {

@@ -19,12 +19,11 @@ func NewLogbookHandler(db *gorm.DB) *LogbookHandler {
 }
 
 type CreateLogbookEntryRequest struct {
-	YachtID       string   `json:"yacht_id" binding:"required"`
-	EntryType     *string  `json:"entry_type"` // Optional - will be auto-detected if not provided
-	FuelLiters    *float64 `json:"fuel_liters"`
-	FuelCost      *float64 `json:"fuel_cost"`
-	HoursOperated *float64 `json:"hours_operated"`
-	Notes         string   `json:"notes"`
+	YachtID              string   `json:"yacht_id" binding:"required"`
+	PortEngineHours      *float64 `json:"port_engine_hours"`
+	StarboardEngineHours *float64 `json:"starboard_engine_hours"`
+	FuelLiters           *float64 `json:"fuel_liters"`
+	Notes                string   `json:"notes"`
 }
 
 // DetectLogType determines if the log is a departure or return based on bookings
@@ -102,37 +101,25 @@ func (h *LogbookHandler) CreateLogbookEntry(c *gin.Context) {
 		return
 	}
 
-	// Determine entry type
-	var entryType models.LogbookEntryType
-	var bookingID *uuid.UUID
-
-	if req.EntryType != nil && *req.EntryType != "" {
-		// Use provided entry type
-		entryType = models.LogbookEntryType(*req.EntryType)
-		println("✅ Using provided entry type:", entryType)
-	} else {
-		// Auto-detect entry type based on bookings
-		detectedType, detectedBookingID, err := h.DetectLogType(yachtID, userUUID, time.Now())
-		if err != nil {
-			println("❌ Failed to detect log type:", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to detect log type"})
-			return
-		}
-		entryType = detectedType
-		bookingID = detectedBookingID
-		println("✅ Auto-detected entry type:", entryType)
+	// Auto-detect entry type based on bookings
+	detectedType, detectedBookingID, err := h.DetectLogType(yachtID, userUUID, time.Now())
+	if err != nil {
+		println("❌ Failed to detect log type:", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to detect log type"})
+		return
 	}
+	println("✅ Auto-detected entry type:", detectedType, "for booking:", detectedBookingID)
 
 	// Create logbook entry
 	entry := models.LogbookEntry{
-		YachtID:       yachtID,
-		UserID:        userUUID,
-		BookingID:     bookingID,
-		EntryType:     entryType,
-		FuelLiters:    req.FuelLiters,
-		FuelCost:      req.FuelCost,
-		HoursOperated: req.HoursOperated,
-		Notes:         req.Notes,
+		YachtID:              yachtID,
+		UserID:               userUUID,
+		BookingID:            detectedBookingID,
+		EntryType:            detectedType,
+		PortEngineHours:      req.PortEngineHours,
+		StarboardEngineHours: req.StarboardEngineHours,
+		FuelLiters:           req.FuelLiters,
+		Notes:                req.Notes,
 	}
 
 	println("💾 Creating logbook entry in database...")
@@ -163,6 +150,11 @@ func (h *LogbookHandler) ListLogbookEntries(c *gin.Context) {
 	// Filter by user_id if provided
 	if userID := c.Query("user_id"); userID != "" {
 		query = query.Where("user_id = ?", userID)
+	}
+
+	// Filter by booking_id if provided
+	if bookingID := c.Query("booking_id"); bookingID != "" {
+		query = query.Where("booking_id = ?", bookingID)
 	}
 
 	// Filter by entry_type if provided

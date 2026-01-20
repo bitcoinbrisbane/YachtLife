@@ -60,7 +60,54 @@ class APIService {
         }
 
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+
+        // Custom date decoder to handle backend's various ISO8601 formats
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+
+            // Try various date formats that the backend might return
+            let formatters: [DateFormatter] = {
+                let locale = Locale(identifier: "en_US_POSIX")
+                let tz = TimeZone(secondsFromGMT: 0)
+
+                // Format with fractional seconds (6 digits) and timezone
+                let formatter1 = DateFormatter()
+                formatter1.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZZZZ"
+                formatter1.locale = locale
+                formatter1.timeZone = tz
+
+                // Format without fractional seconds but with timezone
+                let formatter2 = DateFormatter()
+                formatter2.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+                formatter2.locale = locale
+                formatter2.timeZone = tz
+
+                return [formatter1, formatter2]
+            }()
+
+            // Try each formatter
+            for formatter in formatters {
+                if let date = formatter.date(from: dateString) {
+                    return date
+                }
+            }
+
+            // Fallback to ISO8601 formatter
+            let iso8601Formatter = ISO8601DateFormatter()
+            iso8601Formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = iso8601Formatter.date(from: dateString) {
+                return date
+            }
+
+            // Try without fractional seconds
+            iso8601Formatter.formatOptions = [.withInternetDateTime]
+            if let date = iso8601Formatter.date(from: dateString) {
+                return date
+            }
+
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string: \(dateString)")
+        }
 
         do {
             return try decoder.decode(T.self, from: data)
@@ -122,8 +169,21 @@ class APIService {
     }
 
     // MARK: - Logbook
-    func getLogbookEntries(yachtId: UUID? = nil) async throws -> [LogbookEntry] {
-        let endpoint = yachtId != nil ? "/logbook?yacht_id=\(yachtId!)" : "/logbook"
+    func getLogbookEntries(yachtId: UUID? = nil, bookingId: UUID? = nil) async throws -> [LogbookEntry] {
+        var endpoint = "/logbook"
+        var params: [String] = []
+
+        if let yachtId = yachtId {
+            params.append("yacht_id=\(yachtId)")
+        }
+        if let bookingId = bookingId {
+            params.append("booking_id=\(bookingId)")
+        }
+
+        if !params.isEmpty {
+            endpoint += "?" + params.joined(separator: "&")
+        }
+
         return try await request(endpoint: endpoint)
     }
 

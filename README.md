@@ -161,13 +161,23 @@ YachtLife facilitates the management of yacht syndicates by connecting managemen
 1. **Launch Screen**: User opens the app
 2. **Sign In Screen**:
    - Clean, minimal design
+   - Vessel selection dropdown (shows all yachts for now)
    - Large "Sign in with Apple" button
    - No traditional email/password fields
-3. **Onboarding** (first-time users only):
-   - **Step 1**: Select your vessel from a dropdown/picker
-   - **Step 2**: Select your country
-   - Welcome message and quick tutorial (optional)
-4. **Redirect to Vessel Dashboard**
+3. **Vessel Selection Flow**:
+   - User must select a vessel before signing in
+   - Selected vessel ID is stored in UserDefaults and persists across sessions
+   - **Current Behavior** (v1.0): Shows all yachts in system (not filtered by user ownership)
+   - **Future Enhancement**: Will check `syndicate_shares` table to verify user owns/has access to selected yacht
+   - **Vessel Switching**: Users must log out to switch vessels (edge case - most owners have one yacht)
+   - No real-time validation of vessel access (future feature)
+4. **Sign In with Apple**:
+   - Authenticates user via Apple OAuth
+   - Stores JWT token and selected vessel
+   - Redirects to vessel dashboard for selected yacht
+5. **Dashboard Loading**:
+   - Loads data for the selected vessel stored in memory
+   - All views (bookings, logbook, invoices) scoped to selected vessel
 
 ### Vessel Dashboard (Landing Page)
 The landing page showcases the beauty and specs of the yacht:
@@ -292,6 +302,57 @@ Bottom tab navigation:
 - ✅ Automatic payment reconciliation
 
 ## Architecture
+
+### Vessel Selection Architecture
+
+**Current Implementation (v1.0)**:
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Login Flow                           │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  1. User opens app → LoginView appears                  │
+│  2. LoginView calls GET /api/v1/yachts (loads all)      │
+│  3. User selects yacht from dropdown                     │
+│  4. User taps "Sign in with Apple"                       │
+│  5. mockAppleSignIn() called with selectedVessel         │
+│  6. AuthViewModel stores:                                │
+│     - JWT token in UserDefaults                          │
+│     - selectedYacht: Yacht? in memory                    │
+│     - selected_yacht_id in UserDefaults (persists)       │
+│  7. User redirected to MainTabView                       │
+│  8. DashboardView reads authViewModel.selectedYacht      │
+│  9. All API calls scoped to selected yacht ID            │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Storage Strategy**:
+- `@Published var selectedYacht: Yacht?` in `AuthenticationViewModel` (in-memory, reactive)
+- `selected_yacht_id` in UserDefaults (persistent across app launches)
+- On app launch: If authenticated → Load yacht by ID from API → Populate `selectedYacht`
+
+**Vessel Switching**:
+- **Current**: Not supported - users must log out to switch vessels
+- **Reason**: Edge case (most owners only have one yacht)
+- **Future**: Add vessel switcher in Settings if needed
+
+**Access Control**:
+- **Current (v1.0)**: No validation - trusts user selection
+- **Shows**: All yachts in database (not filtered by ownership)
+- **Future (v2.0)**:
+  - Filter `/yachts` endpoint by `syndicate_shares` table
+  - Only show yachts user owns or has access to
+  - Validate yacht access on selection
+  - Return 403 if user tries to access unauthorized yacht
+
+**Why This Approach**:
+- ✅ Simple to implement for MVP
+- ✅ Single source of truth (yacht ID stored, full object loaded from API)
+- ✅ Consistent data (always fresh from backend)
+- ✅ Memory efficient (don't cache entire yacht object in UserDefaults)
+- ✅ Easy to add access control later
+- ⚠️ Requires API call on app launch (acceptable tradeoff)
 
 ### High-Level Architecture
 

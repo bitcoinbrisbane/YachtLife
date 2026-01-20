@@ -6,12 +6,13 @@ struct LogbookEntry: Codable, Identifiable {
     let bookingID: UUID?
     let userID: UUID
     let entryType: EntryType
+    let portEngineHours: Double?
+    let starboardEngineHours: Double?
     let fuelLiters: Double?
-    let fuelCost: Double?
-    let hoursOperated: Double?
     let notes: String?
     let createdAt: Date
     let yacht: Yacht?
+    let booking: Booking?
     let user: User?
 
     enum CodingKeys: String, CodingKey {
@@ -20,12 +21,13 @@ struct LogbookEntry: Codable, Identifiable {
         case bookingID = "booking_id"
         case userID = "user_id"
         case entryType = "entry_type"
+        case portEngineHours = "port_engine_hours"
+        case starboardEngineHours = "starboard_engine_hours"
         case fuelLiters = "fuel_liters"
-        case fuelCost = "fuel_cost"
-        case hoursOperated = "hours_operated"
         case notes
         case createdAt = "created_at"
         case yacht
+        case booking
         case user
     }
 
@@ -41,18 +43,16 @@ struct LogbookEntry: Codable, Identifiable {
 
 struct CreateLogbookEntryRequest: Codable {
     let yachtID: UUID
-    let entryType: LogbookEntry.EntryType?
+    let portEngineHours: Double?
+    let starboardEngineHours: Double?
     let fuelLiters: Double?
-    let fuelCost: Double?
-    let hoursOperated: Double?
     let notes: String?
 
     enum CodingKeys: String, CodingKey {
         case yachtID = "yacht_id"
-        case entryType = "entry_type"
+        case portEngineHours = "port_engine_hours"
+        case starboardEngineHours = "starboard_engine_hours"
         case fuelLiters = "fuel_liters"
-        case fuelCost = "fuel_cost"
-        case hoursOperated = "hours_operated"
         case notes
     }
 }
