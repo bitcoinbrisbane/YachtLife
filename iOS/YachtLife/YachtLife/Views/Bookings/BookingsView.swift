@@ -107,7 +107,7 @@ struct BookingDetailView: View {
                 if let departureLog = detail.departureLog {
                     Section("Departure Log") {
                         LabeledContent("Recorded") {
-                            Text(formattedDateTime(departureLog.createdAt))
+                            Text(formattedTime(departureLog.createdAt))
                                 .font(.caption)
                         }
 
@@ -144,7 +144,7 @@ struct BookingDetailView: View {
                 if let returnLog = detail.returnLog {
                     Section("Return Log") {
                         LabeledContent("Recorded") {
-                            Text(formattedDateTime(returnLog.createdAt))
+                            Text(formattedTime(returnLog.createdAt))
                                 .font(.caption)
                         }
 
@@ -249,6 +249,12 @@ struct BookingDetailView: View {
     private func formattedDateTime(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "E, d MMM yyyy 'at' h:mm a"
+        return formatter.string(from: date)
+    }
+    
+    private func formattedTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
         return formatter.string(from: date)
     }
 
