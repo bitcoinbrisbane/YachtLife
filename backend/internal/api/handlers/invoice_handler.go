@@ -105,17 +105,18 @@ func calculateInvoiceStats(invoices []models.Invoice) models.InvoiceStats {
 		case models.InvoiceStatusDraft:
 			stats.DraftCount++
 		case models.InvoiceStatusSent:
-			stats.PendingCount++
+			// Check if sent invoice is overdue
+			if time.Now().After(inv.DueDate) {
+				// Treat as overdue, not pending
+				stats.OverdueCount++
+				stats.TotalOutstanding += inv.Amount
+			} else {
+				// Not yet overdue - count as pending
+				stats.PendingCount++
+				stats.TotalOutstanding += inv.Amount
+			}
 		case models.InvoiceStatusOverdue:
 			stats.OverdueCount++
-			stats.TotalOutstanding += inv.Amount
-		}
-
-		// Also check if sent invoices are overdue
-		if inv.Status == models.InvoiceStatusSent && time.Now().After(inv.DueDate) {
-			stats.OverdueCount++
-			stats.TotalOutstanding += inv.Amount
-		} else if inv.Status == models.InvoiceStatusSent {
 			stats.TotalOutstanding += inv.Amount
 		}
 	}
