@@ -10,6 +10,8 @@ struct DashboardView: View {
     @State private var isLoadingLogEntry = false
     @State private var recentActivities: [Activity] = []
     @State private var isLoadingActivities = false
+    @State private var activeBooking: Booking?
+    @State private var hasDepartureLog = false
 
     var body: some View {
         NavigationStack {
@@ -20,9 +22,13 @@ struct DashboardView: View {
                         HeroSection(yacht: yacht, userName: authViewModel.currentUser?.fullName ?? "Owner")
 
                         // Stats Grid
-                        StatsGrid(showingLogEntry: $showingLogEntry, latestLogEntry: latestLogEntry)
-                            .padding(.horizontal)
-                            .padding(.top, 20)
+                        StatsGrid(
+                            showingLogEntry: $showingLogEntry,
+                            latestLogEntry: latestLogEntry,
+                            buttonText: logButtonText
+                        )
+                        .padding(.horizontal)
+                        .padding(.top, 20)
 
                         // Upcoming Bookings
                         if isLoadingBookings {
@@ -103,6 +109,54 @@ struct DashboardView: View {
             await loadBookings()
             await loadLatestLogEntry()
             await loadRecentActivity()
+            await checkBookingLogStatus()
+        }
+    }
+
+    private var logButtonText: String {
+        if let _ = activeBooking {
+            if !hasDepartureLog {
+                return "Create Departure Log"
+            } else {
+                return "Create Return Log"
+            }
+        }
+        return "Create Trip Log"
+    }
+
+    private func checkBookingLogStatus() async {
+        guard let yacht = authViewModel.selectedYacht,
+              let user = authViewModel.currentUser else {
+            print("⚠️ No yacht or user - cannot check booking status")
+            return
+        }
+
+        do {
+            // Get bookings for this yacht and user
+            let allBookings = try await APIService.shared.getBookings(yachtId: yacht.id)
+
+            // Find active booking (current date within start/end date and confirmed/in_progress status)
+            let now = Date()
+            activeBooking = allBookings.first { booking in
+                booking.startDate <= now &&
+                booking.endDate >= now &&
+                booking.userId == user.id &&
+                (booking.status == .confirmed || booking.status == .inProgress)
+            }
+
+            // If we have an active booking, check for departure log
+            if let booking = activeBooking {
+                let logs = try await APIService.shared.getLogbookEntries(bookingId: booking.id)
+                hasDepartureLog = logs.contains { $0.entryType == .depart }
+                print("✅ Active booking found. Has departure log: \(hasDepartureLog)")
+            } else {
+                hasDepartureLog = false
+                print("ℹ️ No active booking found for current user")
+            }
+        } catch {
+            print("❌ Error checking booking/log status: \(error)")
+            activeBooking = nil
+            hasDepartureLog = false
         }
     }
 
@@ -252,6 +306,7 @@ struct HeroSection: View {
 struct StatsGrid: View {
     @Binding var showingLogEntry: Bool
     let latestLogEntry: LogbookEntry?
+    let buttonText: String
 
     var body: some View {
         VStack(spacing: 15) {
@@ -281,13 +336,13 @@ struct StatsGrid: View {
                 color: .green
             )
 
-            // Create Trip Log Button
+            // Create Trip Log Button (text changes based on booking/log status)
             Button {
                 showingLogEntry = true
             } label: {
                 HStack {
                     Image(systemName: "plus.circle.fill")
-                    Text("Create Trip Log")
+                    Text(buttonText)
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)

@@ -9,7 +9,7 @@ import (
 type LogbookEntryType string
 
 const (
-	EntryTypeDeparture   LogbookEntryType = "departure"
+	EntryTypeDeparture   LogbookEntryType = "depart"
 	EntryTypeReturn      LogbookEntryType = "return"
 	EntryTypeFuel        LogbookEntryType = "fuel"
 	EntryTypeMaintenance LogbookEntryType = "maintenance"
@@ -18,7 +18,7 @@ const (
 )
 
 const (
-	TripEntryTypeDepart  LogbookEntryType = "departure"
+	TripEntryTypeDepart  LogbookEntryType = "depart"
 	TripEntryTypeReturn  LogbookEntryType = "return"
 )
 
