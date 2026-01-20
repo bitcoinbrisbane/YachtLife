@@ -27,7 +27,13 @@ func (h *InvoiceHandler) GetInvoicesDashboard(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
-	uid := userID.(uuid.UUID)
+
+	// Safe type assertion with validation
+	uid, ok := userID.(uuid.UUID)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type"})
+		return
+	}
 
 	// Get yacht_id from query parameter (optional - if not provided, get all user's invoices)
 	var yachtID *uuid.UUID
