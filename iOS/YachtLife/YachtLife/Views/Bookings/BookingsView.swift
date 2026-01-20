@@ -219,12 +219,12 @@ struct BookingDetailView: View {
             }
 
             if let notes = booking.notes {
-                Section("Booking Notes") {
+                Section("Notes") {
                     Text(notes)
                 }
             }
         }
-        .navigationTitle("Booking Details")
+        .navigationTitle("Voyage")
         .overlay {
             if isLoading {
                 ProgressView("Loading...")
