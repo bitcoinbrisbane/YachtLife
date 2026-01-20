@@ -83,7 +83,7 @@ struct LoginView: View {
                         Task {
                             await authViewModel.mockAppleSignIn(
                                 userIdentifier: UUID().uuidString,
-                                email: "owner@yachtlife.com",
+                                email: "lucas@lucascullen.com",
                                 fullName: nil,
                                 selectedVessel: selectedVessel
                             )
