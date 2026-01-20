@@ -339,7 +339,7 @@ struct BookingCard: View {
             .cornerRadius(10)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(booking.notes ?? "Yacht Booking")
+                Text(booking.notes)
                     .font(.subheadline)
                     .fontWeight(.semibold)
 
