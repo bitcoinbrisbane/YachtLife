@@ -32,7 +32,7 @@ struct LogbookEntry: Codable, Identifiable {
     }
 
     enum EntryType: String, Codable {
-        case departure
+        case depart
         case `return`
         case fuel
         case maintenance

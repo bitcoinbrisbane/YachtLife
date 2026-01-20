@@ -78,6 +78,7 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		{
 			bookings.GET("", bookingHandler.ListBookings)
 			bookings.GET("/:id", bookingHandler.GetBooking)
+			bookings.GET("/:id/detail", bookingHandler.GetBookingDetail)
 		}
 
 		// Invoice routes (to be implemented)

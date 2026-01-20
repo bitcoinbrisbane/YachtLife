@@ -75,8 +75,8 @@ struct BookingListRow: View {
 
 struct BookingDetailView: View {
     let booking: Booking
-    @State private var logbookEntries: [LogbookEntry] = []
-    @State private var isLoadingLogs = true
+    @State private var bookingDetail: BookingDetail?
+    @State private var isLoading = true
 
     var body: some View {
         List {
@@ -102,53 +102,154 @@ struct BookingDetailView: View {
                 }
             }
 
-            if !logbookEntries.isEmpty {
-                Section("Fuel Details") {
-                    if let departureLog = logbookEntries.first(where: { $0.entryType == .departure }) {
-                        LabeledContent("Fuel Start") {
-                            if let fuelLiters = departureLog.fuelLiters {
-                                Text("\(Int(fuelLiters))L")
-                            } else {
-                                Text("N/A")
-                                    .foregroundColor(.secondary)
+            if let detail = bookingDetail, detail.hasLogbookData {
+                // Departure Log Section
+                if let departureLog = detail.departureLog {
+                    Section("Departure Log") {
+                        LabeledContent("Recorded") {
+                            Text(formattedDateTime(departureLog.createdAt))
+                                .font(.caption)
+                        }
+
+                        if let fuel = departureLog.fuelLiters {
+                            LabeledContent("Fuel Level") {
+                                Text("\(Int(fuel))L")
+                                    .fontWeight(.semibold)
                             }
                         }
-                    }
 
-                    if let returnLog = logbookEntries.first(where: { $0.entryType == .return }) {
-                        LabeledContent("Fuel Finish") {
-                            if let fuelLiters = returnLog.fuelLiters {
-                                Text("\(Int(fuelLiters))L")
-                            } else {
-                                Text("N/A")
-                                    .foregroundColor(.secondary)
+                        if let portHours = departureLog.portEngineHours {
+                            LabeledContent("Port Engine") {
+                                Text(String(format: "%.1f hrs", portHours))
+                                    .fontWeight(.semibold)
+                            }
+                        }
+
+                        if let starboardHours = departureLog.starboardEngineHours {
+                            LabeledContent("Starboard Engine") {
+                                Text(String(format: "%.1f hrs", starboardHours))
+                                    .fontWeight(.semibold)
+                            }
+                        }
+
+                        if let notes = departureLog.notes, !notes.isEmpty {
+                            Text(notes)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                // Return Log Section
+                if let returnLog = detail.returnLog {
+                    Section("Return Log") {
+                        LabeledContent("Recorded") {
+                            Text(formattedDateTime(returnLog.createdAt))
+                                .font(.caption)
+                        }
+
+                        if let fuel = returnLog.fuelLiters {
+                            LabeledContent("Fuel Level") {
+                                Text("\(Int(fuel))L")
+                                    .fontWeight(.semibold)
+                            }
+                        }
+
+                        if let portHours = returnLog.portEngineHours {
+                            LabeledContent("Port Engine") {
+                                Text(String(format: "%.1f hrs", portHours))
+                                    .fontWeight(.semibold)
+                            }
+                        }
+
+                        if let starboardHours = returnLog.starboardEngineHours {
+                            LabeledContent("Starboard Engine") {
+                                Text(String(format: "%.1f hrs", starboardHours))
+                                    .fontWeight(.semibold)
+                            }
+                        }
+
+                        if let notes = returnLog.notes, !notes.isEmpty {
+                            Text(notes)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                // Summary Section (only if we have both departure and return)
+                if detail.departureLog != nil && detail.returnLog != nil {
+                    Section("Trip Summary") {
+                        if let fuelConsumed = detail.fuelConsumed {
+                            LabeledContent("Fuel Consumed") {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "fuelpump.fill")
+                                        .foregroundColor(.green)
+                                    Text("\(Int(fuelConsumed))L")
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.green)
+                                }
+                            }
+                        }
+
+                        if let portDelta = detail.portHoursDelta {
+                            LabeledContent("Port Engine Hours") {
+                                Text(String(format: "+%.1f hrs", portDelta))
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+
+                        if let starboardDelta = detail.starboardHoursDelta {
+                            LabeledContent("Starboard Engine Hours") {
+                                Text(String(format: "+%.1f hrs", starboardDelta))
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.blue)
                             }
                         }
                     }
                 }
+            } else if !isLoading {
+                Section {
+                    Text("No logbook entries for this booking")
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding()
+                }
             }
 
             if let notes = booking.notes {
-                Section("Notes") {
+                Section("Booking Notes") {
                     Text(notes)
                 }
             }
         }
         .navigationTitle("Booking Details")
+        .overlay {
+            if isLoading {
+                ProgressView("Loading...")
+            }
+        }
         .task {
-            await loadLogbookEntries()
+            await loadBookingDetail()
         }
     }
 
-    private func loadLogbookEntries() async {
-        isLoadingLogs = true
+    private func loadBookingDetail() async {
+        isLoading = true
         do {
-            logbookEntries = try await APIService.shared.getLogbookEntries(bookingId: booking.id)
-            print("✅ Loaded \(logbookEntries.count) logbook entries for booking")
+            bookingDetail = try await APIService.shared.getBookingDetail(id: booking.id)
+            print("✅ Loaded booking detail with logbook data")
         } catch {
-            print("❌ Error loading logbook entries: \(error)")
+            print("❌ Error loading booking detail: \(error)")
         }
-        isLoadingLogs = false
+        isLoading = false
+    }
+
+    private func formattedDateTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E, d MMM yyyy 'at' h:mm a"
+        return formatter.string(from: date)
     }
 
     private func statusColor(_ status: Booking.BookingStatus) -> Color {

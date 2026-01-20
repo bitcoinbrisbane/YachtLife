@@ -144,6 +144,10 @@ class APIService {
         try await request(endpoint: "/bookings", method: "POST", body: booking)
     }
 
+    func getBookingDetail(id: UUID) async throws -> BookingDetail {
+        try await request(endpoint: "/bookings/\(id)/detail")
+    }
+
     // MARK: - Invoices
     func getInvoices() async throws -> [Invoice] {
         try await request(endpoint: "/invoices")
