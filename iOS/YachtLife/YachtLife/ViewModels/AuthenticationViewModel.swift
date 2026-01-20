@@ -90,9 +90,9 @@ class AuthenticationViewModel: ObservableObject {
         fullName: PersonNameComponents?,
         selectedVessel: Yacht?
     ) async {
-        // For now, use the test account to login
+        // For now, use the provided email to login
         // In production, this would validate the Apple ID token
-        await login(email: "skipper@neptunefleet.com", password: "password123")
+        await login(email: email, password: "password123")
 
         // Store the selected vessel
         if isAuthenticated, let vessel = selectedVessel {
