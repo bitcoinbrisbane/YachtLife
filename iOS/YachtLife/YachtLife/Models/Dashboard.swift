@@ -11,6 +11,18 @@ struct DashboardViewModel: Codable {
     let hasDepartureLog: Bool
     let upcomingBookings: [BookingInfo]
     let recentActivities: [ActivityInfo]
+
+    enum CodingKeys: String, CodingKey {
+        case userName = "user_name"
+        case vessel
+        case portEngineHours = "port_engine_hours"
+        case starboardEngineHours = "starboard_engine_hours"
+        case fuelLiters = "fuel_liters"
+        case activeBooking = "active_booking"
+        case hasDepartureLog = "has_departure_log"
+        case upcomingBookings = "upcoming_bookings"
+        case recentActivities = "recent_activities"
+    }
 }
 
 struct VesselInfo: Codable {
@@ -20,6 +32,15 @@ struct VesselInfo: Codable {
     let model: String
     let length: Double
     let homePort: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case manufacturer
+        case model
+        case length
+        case homePort = "home_port"
+    }
 }
 
 struct BookingInfo: Codable, Identifiable {
@@ -29,6 +50,15 @@ struct BookingInfo: Codable, Identifiable {
     let status: String
     let standbyDays: Int
     let notes: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case startDate = "start_date"
+        case endDate = "end_date"
+        case status
+        case standbyDays = "standby_days"
+        case notes
+    }
 }
 
 struct ActivityInfo: Codable, Identifiable {
