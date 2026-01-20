@@ -25,6 +25,7 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	bookingHandler := handlers.NewBookingHandler(db)
 	activityHandler := handlers.NewActivityHandler(db)
 	dashboardHandler := handlers.NewDashboardHandler(db)
+	invoiceHandler := handlers.NewInvoiceHandler(db)
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")
@@ -46,6 +47,9 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 			// Dashboard route
 			protected.GET("/dashboard", dashboardHandler.GetDashboard)
+
+			// Invoice dashboard route
+			protected.GET("/invoices/dashboard", invoiceHandler.GetInvoicesDashboard)
 		}
 
 		// Yacht routes (public - no authentication required for browsing)

@@ -40,3 +40,41 @@ type Invoice struct {
 func (Invoice) TableName() string {
 	return "invoices"
 }
+
+// InvoiceViewModel - Aggregated view for invoice dashboard
+type InvoiceViewModel struct {
+	Stats            InvoiceStats      `json:"stats"`
+	Invoices         []InvoiceInfo     `json:"invoices"`
+	RecentActivities []InvoiceActivity `json:"recent_activities"`
+}
+
+// InvoiceStats - Summary statistics for invoices
+type InvoiceStats struct {
+	TotalOutstanding float64 `json:"total_outstanding"`
+	PaidCount        int     `json:"paid_count"`
+	OverdueCount     int     `json:"overdue_count"`
+	PendingCount     int     `json:"pending_count"`
+	DraftCount       int     `json:"draft_count"`
+}
+
+// InvoiceInfo - Simplified invoice data for list view
+type InvoiceInfo struct {
+	ID            uuid.UUID `json:"id"`
+	InvoiceNumber string    `json:"invoice_number"`
+	Description   string    `json:"description"`
+	Amount        float64   `json:"amount"`
+	DueDate       time.Time `json:"due_date"`
+	IssuedDate    time.Time `json:"issued_date"`
+	Status        string    `json:"status"`
+	IsOverdue     bool      `json:"is_overdue"`
+	DaysUntilDue  int       `json:"days_until_due"`
+}
+
+// InvoiceActivity - Recent invoice-related activity
+type InvoiceActivity struct {
+	Icon     string    `json:"icon"`
+	Title    string    `json:"title"`
+	Subtitle string    `json:"subtitle"`
+	Time     time.Time `json:"time"`
+	Color    string    `json:"color"`
+}
