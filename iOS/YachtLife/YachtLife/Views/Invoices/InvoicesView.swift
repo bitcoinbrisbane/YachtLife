@@ -2,99 +2,18 @@ import SwiftUI
 
 struct InvoicesView: View {
     @EnvironmentObject var authViewModel: AuthenticationViewModel
-    @State private var viewModel: InvoiceViewModel?
+    @State private var invoices: [InvoiceInfo] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
-    @State private var selectedFilter: InvoiceFilter = .all
-
-    enum InvoiceFilter: String, CaseIterable {
-        case all = "All"
-        case pending = "Pending"
-        case overdue = "Overdue"
-        case paid = "Paid"
-        case draft = "Draft"
-    }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    if let viewModel = viewModel {
-                        // Stats Cards
-                        StatsSection(stats: viewModel.stats)
-                            .padding(.horizontal)
-                            .padding(.top, 10)
-
-                        // Filter Picker
-                        Picker("Filter", selection: $selectedFilter) {
-                            ForEach(InvoiceFilter.allCases, id: \.self) { filter in
-                                Text(filter.rawValue).tag(filter)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .padding(.horizontal)
-
-                        // Invoices List
-                        VStack(alignment: .leading, spacing: 15) {
-                            Text("Invoices")
-                                .font(.headline)
-                                .padding(.horizontal)
-
-                            if filteredInvoices.isEmpty {
-                                Text("No invoices found")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                            } else {
-                                ForEach(filteredInvoices) { invoice in
-                                    NavigationLink(destination: InvoiceDetailView(invoiceId: invoice.id)) {
-                                        InvoiceCard(invoice: invoice)
-                                    }
-                                }
-                            }
-                        }
-
-                        // Recent Activities
-                        if !viewModel.recentActivities.isEmpty {
-                            VStack(alignment: .leading, spacing: 15) {
-                                Text("Recent Activity")
-                                    .font(.headline)
-                                    .padding(.horizontal)
-
-                                VStack(spacing: 12) {
-                                    ForEach(viewModel.recentActivities) { activity in
-                                        ActivityRow(
-                                            icon: activity.icon,
-                                            title: activity.title,
-                                            subtitle: activity.subtitle,
-                                            time: activity.timeAgo,
-                                            color: activity.colorValue
-                                        )
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
-                            .padding(.top, 10)
-                        }
-                    } else if isLoading {
-                        ProgressView("Loading invoices...")
-                            .padding()
-                    } else if let error = errorMessage {
-                        VStack(spacing: 10) {
-                            Image(systemName: "exclamationmark.triangle")
-                                .font(.system(size: 40))
-                                .foregroundColor(.orange)
-                            Text("Error loading invoices")
-                                .font(.headline)
-                            Text(error)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding()
+            List {
+                ForEach(invoices) { invoice in
+                    NavigationLink(destination: InvoiceDetailView(invoiceId: invoice.id)) {
+                        InvoiceListRow(invoice: invoice)
                     }
                 }
-                .padding(.bottom, 20)
             }
             .navigationTitle("Invoices")
             .task {
@@ -103,23 +22,22 @@ struct InvoicesView: View {
             .refreshable {
                 await loadInvoices()
             }
-        }
-    }
-
-    var filteredInvoices: [InvoiceInfo] {
-        guard let viewModel = viewModel else { return [] }
-
-        switch selectedFilter {
-        case .all:
-            return viewModel.invoices
-        case .pending:
-            return viewModel.invoices.filter { $0.status.lowercased() == "sent" }
-        case .overdue:
-            return viewModel.invoices.filter { $0.isOverdue }
-        case .paid:
-            return viewModel.invoices.filter { $0.status.lowercased() == "paid" }
-        case .draft:
-            return viewModel.invoices.filter { $0.status.lowercased() == "draft" }
+            .overlay {
+                if isLoading {
+                    ProgressView()
+                } else if let error = errorMessage {
+                    VStack(spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 40))
+                            .foregroundColor(.orange)
+                        Text("Error loading invoices")
+                            .font(.headline)
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
         }
     }
 
@@ -134,8 +52,9 @@ struct InvoicesView: View {
         errorMessage = nil
 
         do {
-            viewModel = try await APIService.shared.getInvoicesDashboard(yachtId: yacht.id)
-            print("✅ Loaded invoice dashboard for \(yacht.name)")
+            let viewModel = try await APIService.shared.getInvoicesDashboard(yachtId: yacht.id)
+            invoices = viewModel.invoices
+            print("✅ Loaded \(invoices.count) invoices for \(yacht.name)")
         } catch {
             errorMessage = error.localizedDescription
             print("❌ Error loading invoices: \(error)")
@@ -144,121 +63,45 @@ struct InvoicesView: View {
     }
 }
 
-// MARK: - Stats Section
-struct StatsSection: View {
-    let stats: InvoiceStats
-
-    var body: some View {
-        VStack(spacing: 15) {
-            // Outstanding Amount Card
-            StatCard(
-                icon: "dollarsign.circle.fill",
-                value: String(format: "$%.2f", stats.totalOutstanding),
-                label: "Total Outstanding",
-                color: stats.totalOutstanding > 0 ? .orange : .green
-            )
-
-            // Count Stats Grid
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 15) {
-                StatCard(
-                    icon: "checkmark.circle.fill",
-                    value: "\(stats.paidCount)",
-                    label: "Paid",
-                    color: .green
-                )
-
-                StatCard(
-                    icon: "clock.fill",
-                    value: "\(stats.pendingCount)",
-                    label: "Pending",
-                    color: .blue
-                )
-
-                StatCard(
-                    icon: "exclamationmark.triangle.fill",
-                    value: "\(stats.overdueCount)",
-                    label: "Overdue",
-                    color: .red
-                )
-
-                StatCard(
-                    icon: "doc.text",
-                    value: "\(stats.draftCount)",
-                    label: "Draft",
-                    color: .gray
-                )
-            }
-        }
-    }
-}
-
-// MARK: - Invoice Card
-struct InvoiceCard: View {
+struct InvoiceListRow: View {
     let invoice: InvoiceInfo
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 15) {
-                // Status Icon
-                Image(systemName: invoice.statusIcon)
-                    .font(.system(size: 24))
-                    .foregroundColor(invoice.statusColor)
-                    .frame(width: 40, height: 40)
-                    .background(invoice.statusColor.opacity(0.15))
-                    .cornerRadius(10)
-
-                // Invoice Info
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(invoice.description)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-
-                    Text("Invoice #\(invoice.invoiceNumber)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    HStack(spacing: 4) {
-                        Image(systemName: "calendar")
-                            .font(.caption)
-                        Text(invoice.dueDateInfo)
-                            .font(.caption)
-                        if invoice.isOverdue {
-                            Text("•")
-                                .font(.caption)
-                            Text(invoice.formattedDueDate)
-                                .font(.caption)
-                        }
-                    }
-                    .foregroundColor(invoice.isOverdue ? .red : .secondary)
-                }
-
+        VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text("Invoice #\(invoice.invoiceNumber)")
+                    .font(.headline)
                 Spacer()
-
-                // Amount
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(invoice.formattedAmount)
-                        .font(.headline)
-                        .fontWeight(.bold)
-
-                    Text(invoice.status.capitalized)
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(invoice.statusColor.opacity(0.2))
-                        .foregroundColor(invoice.statusColor)
-                        .cornerRadius(6)
-                }
+                Text(invoice.status.capitalized)
+                    .font(.caption)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(invoice.statusColor.opacity(0.2))
+                    .foregroundColor(invoice.statusColor)
+                    .cornerRadius(6)
             }
-            .padding()
+
+            Text(invoice.description)
+                .font(.subheadline)
+                .foregroundColor(.primary)
+
+            HStack {
+                Text(invoice.formattedAmount)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                Spacer()
+                Text("Due \(formattedDate(invoice.dueDate))")
+                    .font(.caption)
+                    .foregroundColor(invoice.isOverdue ? .red : .secondary)
+            }
         }
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
-        .padding(.horizontal)
+        .padding(.vertical, 4)
+    }
+
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d MMM yyyy"
+        return formatter.string(from: date)
     }
 }
 
