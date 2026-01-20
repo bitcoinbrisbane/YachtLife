@@ -88,9 +88,10 @@ func (h *AuthHandler) AppleSignIn(c *gin.Context) {
 
 	if result.Error == gorm.ErrRecordNotFound {
 		// Create new user
+		appleUserID := claims.Subject
 		user = models.User{
 			ID:          uuid.New(),
-			AppleUserID: claims.Subject,
+			AppleUserID: &appleUserID,
 			Email:       claims.Email,
 			FirstName:   req.FirstName,
 			LastName:    req.LastName,

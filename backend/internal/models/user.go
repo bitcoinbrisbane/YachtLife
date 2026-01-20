@@ -17,7 +17,7 @@ const (
 
 type User struct {
 	ID              uuid.UUID      `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"id"`
-	AppleUserID     string         `gorm:"uniqueIndex;size:255" json:"apple_user_id,omitempty"`
+	AppleUserID     *string        `gorm:"uniqueIndex;size:255" json:"apple_user_id,omitempty"`
 	Email           string         `gorm:"uniqueIndex;not null;size:255" json:"email"`
 	PasswordHash    string         `gorm:"size:255" json:"-"` // Only for managers/admins
 	FirstName       string         `gorm:"size:255" json:"first_name"`

@@ -82,8 +82,9 @@ func SeedData(db *gorm.DB) error {
 	adminResult := db.Where("email = ?", "admin@yachtlife.com").First(&existingAdmin)
 
 	if adminResult.Error != nil {
+		adminAppleID := "admin-web-dashboard"
 		adminUser := models.User{
-			AppleUserID:  "admin-web-dashboard", // Placeholder for web-only admin
+			AppleUserID:  &adminAppleID, // Placeholder for web-only admin
 			Email:        "admin@yachtlife.com",
 			PasswordHash: "$2a$10$VhZRWNPg2GRSYDi7iGyJ1.adAtPGsYxUBslgApq4cc6mCIFFeDx8C", // bcrypt hash of "admin123"
 			FirstName:    "Admin",
@@ -108,8 +109,9 @@ func SeedData(db *gorm.DB) error {
 	managerResult := db.Where("email = ?", "manager@yachtlife.com").First(&existingManager)
 
 	if managerResult.Error != nil {
+		managerAppleID := "manager-web-dashboard"
 		managerUser := models.User{
-			AppleUserID:  "manager-web-dashboard", // Placeholder for web-only manager
+			AppleUserID:  &managerAppleID, // Placeholder for web-only manager
 			Email:        "manager@yachtlife.com",
 			PasswordHash: "$2a$10$VhZRWNPg2GRSYDi7iGyJ1.adAtPGsYxUBslgApq4cc6mCIFFeDx8C", // bcrypt hash of "admin123"
 			FirstName:    "Fleet",
