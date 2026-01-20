@@ -23,6 +23,7 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	userHandler := handlers.NewUserHandler(db)
 	logbookHandler := handlers.NewLogbookHandler(db)
 	bookingHandler := handlers.NewBookingHandler(db)
+	activityHandler := handlers.NewActivityHandler(db)
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")
@@ -93,6 +94,12 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 			maintenance.GET("", func(c *gin.Context) {
 				c.JSON(501, gin.H{"message": "List Maintenance Requests - Not Implemented"})
 			})
+		}
+
+		// Activity routes (public - no authentication required for now)
+		activity := v1.Group("/activity")
+		{
+			activity.GET("/recent", activityHandler.GetRecentActivity)
 		}
 	}
 }

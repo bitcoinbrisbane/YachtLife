@@ -168,6 +168,17 @@ class APIService {
         try await request(endpoint: "/yachts/\(id)")
     }
 
+    // MARK: - Activity
+    func getRecentActivity(yachtId: UUID? = nil) async throws -> [Activity] {
+        var endpoint = "/activity/recent"
+        if let yachtId = yachtId {
+            endpoint += "?yacht_id=\(yachtId)"
+        }
+
+        let response: RecentActivityResponse = try await request(endpoint: endpoint)
+        return response.activities
+    }
+
     // MARK: - Logbook
     func getLogbookEntries(yachtId: UUID? = nil, bookingId: UUID? = nil) async throws -> [LogbookEntry] {
         var endpoint = "/logbook"

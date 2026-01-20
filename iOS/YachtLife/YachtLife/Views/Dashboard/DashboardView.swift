@@ -8,6 +8,8 @@ struct DashboardView: View {
     @State private var bookingsError: String?
     @State private var latestLogEntry: LogbookEntry?
     @State private var isLoadingLogEntry = false
+    @State private var recentActivities: [Activity] = []
+    @State private var isLoadingActivities = false
 
     var body: some View {
         NavigationStack {
@@ -36,7 +38,7 @@ struct DashboardView: View {
                         }
 
                         // Recent Activity
-                        RecentActivitySection()
+                        RecentActivitySection(activities: recentActivities, isLoading: isLoadingActivities)
                             .padding(.top, 25)
                             .padding(.bottom, 20)
                     }
@@ -100,7 +102,27 @@ struct DashboardView: View {
         Task {
             await loadBookings()
             await loadLatestLogEntry()
+            await loadRecentActivity()
         }
+    }
+
+    private func loadRecentActivity() async {
+        guard let yacht = authViewModel.selectedYacht else {
+            print("⚠️ No yacht selected - cannot load activities")
+            return
+        }
+
+        isLoadingActivities = true
+
+        do {
+            recentActivities = try await APIService.shared.getRecentActivity(yachtId: yacht.id)
+            print("✅ Loaded \(recentActivities.count) recent activities for \(yacht.name)")
+        } catch {
+            print("❌ Error loading activities: \(error)")
+            // Keep empty list on error
+        }
+
+        isLoadingActivities = false
     }
 
     private func loadBookings() async {
@@ -410,38 +432,39 @@ struct BookingCard: View {
 
 // MARK: - Recent Activity Section
 struct RecentActivitySection: View {
+    let activities: [Activity]
+    let isLoading: Bool
+
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             Text("Recent Activity")
                 .font(.headline)
                 .padding(.horizontal)
 
-            VStack(spacing: 12) {
-                ActivityRow(
-                    icon: "checkmark.circle.fill",
-                    title: "Checklist Completed",
-                    subtitle: "Pre-departure checklist",
-                    time: "2 hours ago",
-                    color: .green
-                )
-
-                ActivityRow(
-                    icon: "fuelpump.fill",
-                    title: "Fuel Added",
-                    subtitle: "450L at Gold Coast Marina",
-                    time: "1 day ago",
-                    color: .blue
-                )
-
-                ActivityRow(
-                    icon: "dollarsign.circle.fill",
-                    title: "Payment Received",
-                    subtitle: "Invoice #1023 - $2,450",
-                    time: "3 days ago",
-                    color: .orange
-                )
+            if isLoading {
+                ProgressView("Loading activities...")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else if activities.isEmpty {
+                Text("No recent activity")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else {
+                VStack(spacing: 12) {
+                    ForEach(activities) { activity in
+                        ActivityRow(
+                            icon: activity.icon,
+                            title: activity.title,
+                            subtitle: activity.subtitle,
+                            time: activity.timeAgo,
+                            color: activity.colorValue
+                        )
+                    }
+                }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
         }
     }
 }

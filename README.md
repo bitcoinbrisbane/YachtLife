@@ -354,6 +354,114 @@ Bottom tab navigation:
 - ✅ Easy to add access control later
 - ⚠️ Requires API call on app launch (acceptable tradeoff)
 
+---
+
+### Recent Activity Architecture
+
+**Overview**:
+The Recent Activity feature provides users with a unified timeline of important events related to their yacht (fuel logs, payments, maintenance, bookings, checklists).
+
+**Implementation Strategy (Phased Approach)**:
+
+**Phase 1: Mock API (Current)**
+```
+┌─────────────────────────────────────────────────────────────┐
+│              Recent Activity Data Flow (Mock)               │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. DashboardView.onAppear()                                │
+│     └─> loadRecentActivity()                                │
+│                                                              │
+│  2. APIService.getRecentActivity(yachtId)                   │
+│     └─> GET /api/v1/activity/recent?yacht_id={id}          │
+│                                                              │
+│  3. Backend ActivityHandler                                  │
+│     └─> Returns hardcoded mock activities                   │
+│         [Checklist, Fuel, Payment]                          │
+│                                                              │
+│  4. iOS parses response → [Activity] array                  │
+│                                                              │
+│  5. RecentActivitySection displays activities               │
+│     └─> ForEach(activities) { ActivityRow }                │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Phase 2: Real Data Integration (Future)**
+```
+┌─────────────────────────────────────────────────────────────┐
+│          Recent Activity Data Flow (Real Queries)           │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Backend ActivityService aggregates from:                    │
+│                                                              │
+│  1. logbook_entries (fuel logs)                             │
+│     └─> "Fuel Added: 450L at Gold Coast Marina"            │
+│                                                              │
+│  2. payments (completed invoices)                            │
+│     └─> "Payment Received: Invoice #1023 - $2,450"         │
+│                                                              │
+│  3. maintenance_requests (new/updated requests)              │
+│     └─> "Maintenance Request: Port engine service"          │
+│                                                              │
+│  4. checklists (completed checklists)                        │
+│     └─> "Checklist Completed: Pre-departure checklist"      │
+│                                                              │
+│  5. bookings (new/cancelled bookings)                        │
+│     └─> "Booking Confirmed: Jan 25-28"                      │
+│                                                              │
+│  Aggregation Logic:                                          │
+│  - Query each table for recent records (last 30 days)       │
+│  - Map to unified ActivityItem format                        │
+│  - Sort by timestamp DESC                                    │
+│  - Return top 10 most recent                                 │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Activity Item Structure**:
+```json
+{
+  "id": "uuid",
+  "type": "fuel|payment|maintenance|checklist|booking",
+  "title": "Short description",
+  "subtitle": "Detailed information",
+  "icon": "SF Symbol name (fuelpump.fill, dollarsign.circle.fill, etc.)",
+  "color": "#hex color",
+  "timestamp": "2024-01-20T10:00:00Z",
+  "related_id": "uuid (optional - ID of booking, invoice, etc.)",
+  "related_type": "booking|invoice|maintenance_request (optional)"
+}
+```
+
+**Activity Types & Mapping**:
+
+| Source Table           | Activity Type   | Icon                      | Color  | Title Format                    |
+|------------------------|-----------------|---------------------------|---------|---------------------------------|
+| `logbook_entries`      | `fuel`          | `fuelpump.fill`           | Blue    | "Fuel Added"                    |
+| `payments`             | `payment`       | `dollarsign.circle.fill`  | Orange  | "Payment Received"              |
+| `maintenance_requests` | `maintenance`   | `wrench.fill`             | Red     | "Maintenance Request"           |
+| `checklists`           | `checklist`     | `checkmark.circle.fill`   | Green   | "Checklist Completed"           |
+| `bookings`             | `booking`       | `calendar`                | Purple  | "Booking Confirmed/Cancelled"   |
+
+**Benefits**:
+- ✅ Unified activity stream across all features
+- ✅ Mock data allows UI development without complex queries
+- ✅ Easy to add new activity sources incrementally
+- ✅ Type-safe on both backend (Go) and frontend (Swift)
+- ✅ Relative time formatting ("2 hours ago", "1 day ago")
+- ✅ Optional navigation to detail views via related_id
+
+**Future Enhancements**:
+1. **Pagination**: Add `?limit=10&offset=0` for infinite scroll
+2. **Filtering**: Add `?type=fuel,payment` to filter by activity type
+3. **User-specific**: Filter activities by current user's actions
+4. **Notifications**: Link to push notification system
+5. **Tappable Activities**: Navigate to booking detail, invoice detail, etc.
+6. **Activity Groups**: Group by date ("Today", "Yesterday", "Last Week")
+
+---
+
 ### High-Level Architecture
 
 ```
