@@ -4,7 +4,6 @@ struct InvoicesView: View {
     @EnvironmentObject var authViewModel: AuthenticationViewModel
     @State private var invoices: [InvoiceInfo] = []
     @State private var isLoading = true
-    @State private var errorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -19,23 +18,9 @@ struct InvoicesView: View {
             .task {
                 await loadInvoices()
             }
-            .refreshable {
-                await loadInvoices()
-            }
             .overlay {
                 if isLoading {
                     ProgressView()
-                } else if let error = errorMessage {
-                    VStack(spacing: 10) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 40))
-                            .foregroundColor(.orange)
-                        Text("Error loading invoices")
-                            .font(.headline)
-                        Text(error)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
                 }
             }
         }
@@ -49,14 +34,11 @@ struct InvoicesView: View {
         }
 
         isLoading = true
-        errorMessage = nil
-
         do {
             let viewModel = try await APIService.shared.getInvoicesDashboard(yachtId: yacht.id)
             invoices = viewModel.invoices
             print("✅ Loaded \(invoices.count) invoices for \(yacht.name)")
         } catch {
-            errorMessage = error.localizedDescription
             print("❌ Error loading invoices: \(error)")
         }
         isLoading = false
@@ -82,26 +64,20 @@ struct InvoiceListRow: View {
             }
 
             Text(invoice.description)
-                .font(.subheadline)
-                .foregroundColor(.primary)
+                .font(.caption)
+                .foregroundColor(.secondary)
 
             HStack {
                 Text(invoice.formattedAmount)
                     .font(.subheadline)
                     .fontWeight(.semibold)
                 Spacer()
-                Text("Due \(formattedDate(invoice.dueDate))")
+                Text("Due \(invoice.dueDate, style: .date)")
                     .font(.caption)
                     .foregroundColor(invoice.isOverdue ? .red : .secondary)
             }
         }
         .padding(.vertical, 4)
-    }
-
-    private func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d MMM yyyy"
-        return formatter.string(from: date)
     }
 }
 

@@ -48,7 +48,6 @@ struct BookingInfo: Codable, Identifiable {
     let startDate: Date
     let endDate: Date
     let status: String
-    let standbyDays: Int
     let notes: String
 
     enum CodingKeys: String, CodingKey {
@@ -56,7 +55,6 @@ struct BookingInfo: Codable, Identifiable {
         case startDate = "start_date"
         case endDate = "end_date"
         case status
-        case standbyDays = "standby_days"
         case notes
     }
 }

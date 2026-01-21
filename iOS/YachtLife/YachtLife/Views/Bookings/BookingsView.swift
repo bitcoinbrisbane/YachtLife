@@ -65,9 +65,12 @@ struct BookingListRow: View {
                     .cornerRadius(6)
             }
 
-            Text("\(booking.standbyDays) standby days")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            if let notes = booking.notes, !notes.isEmpty {
+                Text(notes)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
         }
         .padding(.vertical, 4)
     }
@@ -96,7 +99,6 @@ struct BookingDetailView: View {
                             .foregroundColor(statusColor(booking.status))
                     }
                 }
-                LabeledContent("Standby Days", value: "\(booking.standbyDays)")
                 LabeledContent("Created") {
                     Text(formattedDate(booking.createdAt))
                 }
@@ -279,14 +281,12 @@ struct CreateBookingView: View {
     @Environment(\.dismiss) var dismiss
     @State private var startDate = Date()
     @State private var endDate = Date().addingTimeInterval(86400 * 7)
-    @State private var standbyDays = 2
 
     var body: some View {
         NavigationStack {
             Form {
                 DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
                 DatePicker("End Date", selection: $endDate, displayedComponents: .date)
-                Stepper("Standby Days: \(standbyDays)", value: $standbyDays, in: 0...7)
             }
             .navigationTitle("New Booking")
             .toolbar {

@@ -101,12 +101,11 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 
 	if err == nil {
 		viewModel.ActiveBooking = &models.BookingInfo{
-			ID:          activeBooking.ID,
-			StartDate:   activeBooking.StartDate,
-			EndDate:     activeBooking.EndDate,
-			Status:      string(activeBooking.Status),
-			StandbyDays: activeBooking.StandbyDays,
-			Notes:       activeBooking.Notes,
+			ID:        activeBooking.ID,
+			StartDate: activeBooking.StartDate,
+			EndDate:   activeBooking.EndDate,
+			Status:    string(activeBooking.Status),
+			Notes:     activeBooking.Notes,
 		}
 
 		// Check for departure log
@@ -125,12 +124,11 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 
 	for _, b := range bookings {
 		viewModel.UpcomingBookings = append(viewModel.UpcomingBookings, models.BookingInfo{
-			ID:          b.ID,
-			StartDate:   b.StartDate,
-			EndDate:     b.EndDate,
-			Status:      string(b.Status),
-			StandbyDays: b.StandbyDays,
-			Notes:       b.Notes,
+			ID:        b.ID,
+			StartDate: b.StartDate,
+			EndDate:   b.EndDate,
+			Status:    string(b.Status),
+			Notes:     b.Notes,
 		})
 	}
 

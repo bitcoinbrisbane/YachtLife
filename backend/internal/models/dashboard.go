@@ -39,12 +39,11 @@ type VesselInfo struct {
 }
 
 type BookingInfo struct {
-	ID          uuid.UUID `json:"id"`
-	StartDate   time.Time `json:"start_date"`
-	EndDate     time.Time `json:"end_date"`
-	Status      string    `json:"status"`
-	StandbyDays int       `json:"standby_days"`
-	Notes       string    `json:"notes"`
+	ID        uuid.UUID `json:"id"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+	Status    string    `json:"status"`
+	Notes     string    `json:"notes"`
 }
 
 type ActivityInfo struct {

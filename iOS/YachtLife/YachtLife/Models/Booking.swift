@@ -6,10 +6,7 @@ struct Booking: Codable, Identifiable {
     let userId: UUID
     let startDate: Date
     let endDate: Date
-    let standbyDays: Int
     let status: BookingStatus
-    let bookingType: String?
-    let isStandby: Bool?
     let notes: String?
     let cancelledAt: Date?
     let createdAt: Date
@@ -25,10 +22,7 @@ struct Booking: Codable, Identifiable {
         case userId = "user_id"
         case startDate = "start_date"
         case endDate = "end_date"
-        case standbyDays = "standby_days"
         case status
-        case bookingType = "booking_type"
-        case isStandby = "is_standby"
         case notes
         case cancelledAt = "cancelled_at"
         case createdAt = "created_at"
@@ -52,7 +46,6 @@ struct BookingChangeRequest: Codable, Identifiable {
     let userId: UUID
     let requestedStartDate: Date?
     let requestedEndDate: Date?
-    let requestedStandbyDays: Int?
     let reason: String
     let status: RequestStatus
     let createdAt: Date
