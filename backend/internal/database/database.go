@@ -266,31 +266,28 @@ func SeedData(db *gorm.DB) error {
 
 	bookings := []models.Booking{
 		{
-			YachtID:     neptunesPride.ID,
-			UserID:      testOwnerUser.ID,
-			StartDate:   startTime.AddDate(0, 0, 5),  // 5 days from now at 10am
-			EndDate:     endTime.AddDate(0, 0, 8),    // 8 days from now at 7pm
-			StandbyDays: 2,
-			Status:      models.BookingStatusConfirmed,
-			Notes:       "Weekend cruise to Whitsundays",
+			YachtID:   neptunesPride.ID,
+			UserID:    testOwnerUser.ID,
+			StartDate: startTime.AddDate(0, 0, 5), // 5 days from now at 10am
+			EndDate:   endTime.AddDate(0, 0, 8),   // 8 days from now at 7pm
+			Status:    models.BookingStatusConfirmed,
+			Notes:     "Weekend cruise to Whitsundays",
 		},
 		{
-			YachtID:     neptunesPride.ID,
-			UserID:      testOwnerUser.ID,
-			StartDate:   startTime.AddDate(0, 0, 18), // 18 days from now at 10am
-			EndDate:     endTime.AddDate(0, 0, 21),   // 21 days from now at 7pm
-			StandbyDays: 1,
-			Status:      models.BookingStatusPending,
-			Notes:       "Family fishing trip",
+			YachtID:   neptunesPride.ID,
+			UserID:    testOwnerUser.ID,
+			StartDate: startTime.AddDate(0, 0, 18), // 18 days from now at 10am
+			EndDate:   endTime.AddDate(0, 0, 21),   // 21 days from now at 7pm
+			Status:    models.BookingStatusPending,
+			Notes:     "Family fishing trip",
 		},
 		{
-			YachtID:     neptunesPride.ID,
-			UserID:      testOwnerUser.ID,
-			StartDate:   startTime.AddDate(0, 1, 2),  // 1 month + 2 days from now at 10am
-			EndDate:     endTime.AddDate(0, 1, 5),    // 1 month + 5 days from now at 7pm
-			StandbyDays: 0,
-			Status:      models.BookingStatusConfirmed,
-			Notes:       "Summer vacation at Hamilton Island",
+			YachtID:   neptunesPride.ID,
+			UserID:    testOwnerUser.ID,
+			StartDate: startTime.AddDate(0, 1, 2), // 1 month + 2 days from now at 10am
+			EndDate:   endTime.AddDate(0, 1, 5),   // 1 month + 5 days from now at 7pm
+			Status:    models.BookingStatusConfirmed,
+			Notes:     "Summer vacation at Hamilton Island",
 		},
 	}
 

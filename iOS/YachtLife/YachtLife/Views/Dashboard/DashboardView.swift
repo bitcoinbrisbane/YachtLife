@@ -365,15 +365,6 @@ struct BookingCard: View {
                             .foregroundColor(statusColor(booking.status))
                     }
                     .font(.caption)
-
-                    if booking.standbyDays > 0 {
-                        HStack(spacing: 4) {
-                            Image(systemName: "clock.fill")
-                            Text("\(booking.standbyDays) standby days")
-                        }
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    }
                 }
             }
 
