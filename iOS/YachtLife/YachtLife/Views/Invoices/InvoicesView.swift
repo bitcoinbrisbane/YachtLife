@@ -149,6 +149,7 @@ struct InvoiceDetailView: View {
                     }
                 }
                 .navigationTitle("Invoice #\(invoice.invoiceNumber)")
+                .navigationBarTitleDisplayMode(.inline)
             } else if isLoading {
                 ProgressView("Loading invoice...")
             } else {
