@@ -124,8 +124,31 @@ struct InvoiceDetailView: View {
                             }
                         }
                     }
+
+                    // Apple Pay button - only show for unpaid invoices
+                    if invoice.status != .paid {
+                        Section {
+                            Button(action: {
+                                // Placeholder - not wired up yet
+                                print("Apple Pay button tapped")
+                            }) {
+                                HStack {
+                                    Image(systemName: "apple.logo")
+                                        .font(.title3)
+                                    Text("Pay with Apple Pay")
+                                        .fontWeight(.semibold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .foregroundColor(.white)
+                                .background(Color.black)
+                                .cornerRadius(8)
+                            }
+                            .listRowBackground(Color.clear)
+                        }
+                    }
                 }
-                .navigationTitle("Invoice Details")
+                .navigationTitle("Invoice #\(invoice.invoiceNumber)")
             } else if isLoading {
                 ProgressView("Loading invoice...")
             } else {
