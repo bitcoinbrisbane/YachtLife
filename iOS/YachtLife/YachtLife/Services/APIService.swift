@@ -161,6 +161,10 @@ class APIService {
         return try await request(endpoint: endpoint)
     }
 
+    func getInvoice(id: UUID) async throws -> Invoice {
+        try await request(endpoint: "/invoices/\(id)")
+    }
+
     // MARK: - Maintenance
     func getMaintenanceRequests(yachtId: UUID? = nil) async throws -> [MaintenanceRequest] {
         let endpoint = yachtId != nil ? "/maintenance?yacht_id=\(yachtId!)" : "/maintenance"

@@ -109,12 +109,19 @@ struct InvoiceDetailView: View {
                         }
                     }
 
-                    if invoice.status != .paid {
+                    if let xeroURL = invoice.xeroURL, let url = URL(string: xeroURL) {
                         Section {
-                            Button("Pay with Apple Pay") {
-                                // TODO: Implement Apple Pay
+                            Link(destination: url) {
+                                HStack {
+                                    Image(systemName: "arrow.up.right.square")
+                                    Text("View in Xero")
+                                        .fontWeight(.semibold)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
                             }
-                            .buttonStyle(.borderedProminent)
                         }
                     }
                 }
@@ -126,10 +133,19 @@ struct InvoiceDetailView: View {
             }
         }
         .task {
-            // TODO: Implement getInvoice(id:) in APIService
-            // For now, we'd need to add an endpoint to fetch individual invoice details
-            print("Loading invoice \(invoiceId)")
+            await loadInvoice()
         }
+    }
+
+    private func loadInvoice() async {
+        isLoading = true
+        do {
+            invoice = try await APIService.shared.getInvoice(id: invoiceId)
+            print("✅ Loaded invoice \(invoiceId)")
+        } catch {
+            print("❌ Error loading invoice: \(error)")
+        }
+        isLoading = false
     }
 }
 

@@ -94,6 +94,53 @@ func (h *InvoiceHandler) GetInvoicesDashboard(c *gin.Context) {
 	c.JSON(http.StatusOK, viewModel)
 }
 
+// GetInvoice returns a single invoice by ID
+func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
+	// Get authenticated user
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	// Safe type assertion with validation
+	uid, ok := userID.(uuid.UUID)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type"})
+		return
+	}
+
+	// Get invoice ID from URL parameter
+	invoiceIDStr := c.Param("id")
+	invoiceID, err := uuid.Parse(invoiceIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid invoice ID"})
+		return
+	}
+
+	// Fetch invoice from database
+	var invoice models.Invoice
+	if err := h.db.First(&invoice, invoiceID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Invoice not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch invoice"})
+		}
+		return
+	}
+
+	// Verify user owns the invoice (check user_id matches)
+	if invoice.UserID != uid {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	// Generate Xero URL
+	invoice.GenerateXeroURL()
+
+	c.JSON(http.StatusOK, invoice)
+}
+
 // calculateInvoiceStats computes statistics from a list of invoices
 func calculateInvoiceStats(invoices []models.Invoice) models.InvoiceStats {
 	stats := models.InvoiceStats{}
