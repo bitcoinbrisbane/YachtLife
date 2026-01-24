@@ -309,5 +309,73 @@ func SeedData(db *gorm.DB) error {
 			booking.Status)
 	}
 
+	// Create seed invoices for testing
+	paidDate := time.Now().AddDate(0, -1, -15) // Paid 1.5 months ago
+	invoices := []models.Invoice{
+		{
+			XeroInvoiceID: "XERO-INV-001-PAID",
+			YachtID:       neptunesPride.ID,
+			UserID:        testOwnerUser.ID,
+			InvoiceNumber: "YL-2024-001",
+			Description:   "November 2024 - Marina berth fees and maintenance",
+			Amount:        2450.00,
+			IssuedDate:    time.Now().AddDate(0, -2, -5), // Issued 2 months 5 days ago
+			DueDate:       time.Now().AddDate(0, -1, -20), // Due 1 month 20 days ago
+			Status:        models.InvoiceStatusPaid,
+			PaidDate:      &paidDate,
+		},
+		{
+			XeroInvoiceID: "XERO-INV-002-OVERDUE",
+			YachtID:       neptunesPride.ID,
+			UserID:        testOwnerUser.ID,
+			InvoiceNumber: "YL-2024-002",
+			Description:   "December 2024 - Fuel, cleaning and syndicate fees",
+			Amount:        3890.50,
+			IssuedDate:    time.Now().AddDate(0, -1, -10), // Issued 1 month 10 days ago
+			DueDate:       time.Now().AddDate(0, 0, -5),   // Overdue by 5 days
+			Status:        models.InvoiceStatusOverdue,
+		},
+		{
+			XeroInvoiceID: "XERO-INV-003-SENT",
+			YachtID:       neptunesPride.ID,
+			UserID:        testOwnerUser.ID,
+			InvoiceNumber: "YL-2025-001",
+			Description:   "January 2025 - Monthly ownership costs and insurance",
+			Amount:        4120.75,
+			IssuedDate:    time.Now().AddDate(0, 0, -3), // Issued 3 days ago
+			DueDate:       time.Now().AddDate(0, 0, 12), // Due in 12 days
+			Status:        models.InvoiceStatusSent,
+		},
+		{
+			XeroInvoiceID: "XERO-INV-004-DRAFT",
+			YachtID:       neptunesPride.ID,
+			UserID:        testOwnerUser.ID,
+			InvoiceNumber: "YL-2025-002",
+			Description:   "February 2025 - Upcoming maintenance and berth fees",
+			Amount:        2850.00,
+			IssuedDate:    time.Now(),
+			DueDate:       time.Now().AddDate(0, 1, 0), // Due in 1 month
+			Status:        models.InvoiceStatusDraft,
+		},
+	}
+
+	for i, invoice := range invoices {
+		// Check if invoice already exists
+		var existingInvoice models.Invoice
+		result := db.Where("invoice_number = ?", invoice.InvoiceNumber).First(&existingInvoice)
+		if result.Error == nil {
+			continue // Skip if already exists
+		}
+
+		if err := db.Create(&invoice).Error; err != nil {
+			return fmt.Errorf("failed to create invoice %d: %w", i+1, err)
+		}
+		log.Printf("✅ Created invoice: %s - %s ($%.2f, %s)\n",
+			invoice.InvoiceNumber,
+			invoice.Description,
+			invoice.Amount,
+			invoice.Status)
+	}
+
 	return nil
 }
