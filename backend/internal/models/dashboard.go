@@ -21,6 +21,7 @@ type DashboardViewModel struct {
 	// Booking status
 	ActiveBooking   *BookingInfo `json:"active_booking,omitempty"`
 	HasDepartureLog bool         `json:"has_departure_log"`
+	HasReturnLog    bool         `json:"has_return_log"`
 
 	// Upcoming bookings (next 3)
 	UpcomingBookings []BookingInfo `json:"upcoming_bookings"`

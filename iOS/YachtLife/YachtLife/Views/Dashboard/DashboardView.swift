@@ -120,11 +120,11 @@ struct DashboardView: View {
         if data.activeBooking != nil {
             if !data.hasDepartureLog {
                 return "Create Departure Log"
-            } else {
+            } else if !data.hasReturnLog {
                 return "Create Return Log"
             }
         }
-        return "Create Trip Log"
+        return "View / Edit Logs"
     }
 }
 
