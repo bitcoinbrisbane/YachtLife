@@ -45,6 +45,9 @@ struct DashboardView: View {
                         }
                     }
                 }
+                .refreshable {
+                    await refreshDashboard()
+                }
                 .ignoresSafeArea(edges: .top)
                 .navigationBarHidden(true)
                 .sheet(isPresented: $showingLogEntry) {
@@ -116,6 +119,21 @@ struct DashboardView: View {
         }
     }
 
+    private func refreshDashboard() async {
+        // Only refresh if we have a selected yacht
+        guard let yacht = authViewModel.selectedYacht else {
+            return
+        }
+        
+        do {
+            dashboardData = try await APIService.shared.getDashboard(yachtId: yacht.id)
+            print("✅ Refreshed dashboard data for \(yacht.name)")
+        } catch {
+            errorMessage = error.localizedDescription
+            print("❌ Error refreshing dashboard: \(error)")
+        }
+    }
+    
     private func logButtonText(data: DashboardViewModel) -> String {
         if data.activeBooking != nil {
             if !data.hasDepartureLog {
