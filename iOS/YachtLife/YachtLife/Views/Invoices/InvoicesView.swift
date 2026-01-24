@@ -72,12 +72,18 @@ struct InvoiceListRow: View {
                     .font(.subheadline)
                     .fontWeight(.semibold)
                 Spacer()
-                Text("Due \(invoice.dueDate, style: .date)")
+                Text("Due \(formatDueDate(invoice.dueDate))")
                     .font(.caption)
                     .foregroundColor(invoice.isOverdue ? .red : .secondary)
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func formatDueDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E, d MMM yyyy"
+        return formatter.string(from: date)
     }
 }
 
