@@ -148,7 +148,7 @@ struct InvoiceDetailView: View {
                         }
                     }
                 }
-                .navigationTitle("Invoice #\(invoice.invoiceNumber)")
+                .navigationTitle(invoice.xeroInvoiceId ?? "Invoice")
                 .navigationBarTitleDisplayMode(.inline)
             } else if isLoading {
                 ProgressView("Loading invoice...")
