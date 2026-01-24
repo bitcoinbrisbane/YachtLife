@@ -94,8 +94,8 @@ struct InvoiceDetailView: View {
                     Section("Invoice Details") {
                         LabeledContent("Invoice Number", value: invoice.xeroInvoiceId ?? "N/A")
                         LabeledContent("Amount", value: String(format: "$%.2f", invoice.amount))
-                        LabeledContent("Due Date", value: invoice.dueDate, format: .dateTime)
-                        LabeledContent("Issued Date", value: invoice.createdAt, format: .dateTime)
+                        LabeledContent("Due Date", value: formatDate(invoice.dueDate))
+                        LabeledContent("Issued Date", value: formatDate(invoice.issuedDate))
                         LabeledContent("Status", value: invoice.status.rawValue.capitalized)
                     }
 
@@ -105,7 +105,7 @@ struct InvoiceDetailView: View {
 
                     if let paidAt = invoice.paidAt {
                         Section("Payment") {
-                            LabeledContent("Paid Date", value: paidAt, format: .dateTime)
+                            LabeledContent("Paid Date", value: formatDate(paidAt))
                         }
                     }
 
@@ -170,6 +170,12 @@ struct InvoiceDetailView: View {
             print("❌ Error loading invoice: \(error)")
         }
         isLoading = false
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd/MM/yyyy"
+        return formatter.string(from: date)
     }
 }
 
