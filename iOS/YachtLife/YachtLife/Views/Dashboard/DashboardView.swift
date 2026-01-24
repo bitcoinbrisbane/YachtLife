@@ -45,6 +45,9 @@ struct DashboardView: View {
                         }
                     }
                 }
+                .refreshable {
+                    await refreshDashboard()
+                }
                 .ignoresSafeArea(edges: .top)
                 .navigationBarHidden(true)
                 .sheet(isPresented: $showingLogEntry) {
@@ -105,17 +108,30 @@ struct DashboardView: View {
         errorMessage = nil
 
         Task {
-            do {
-                dashboardData = try await APIService.shared.getDashboard(yachtId: yacht.id)
-                print("✅ Loaded dashboard data for \(yacht.name)")
-            } catch {
-                errorMessage = error.localizedDescription
-                print("❌ Error loading dashboard: \(error)")
-            }
+            await fetchDashboardData(for: yacht)
             isLoading = false
         }
     }
 
+    private func refreshDashboard() async {
+        // Only refresh if we have a selected yacht
+        guard let yacht = authViewModel.selectedYacht else {
+            return
+        }
+        
+        await fetchDashboardData(for: yacht)
+    }
+    
+    private func fetchDashboardData(for yacht: Yacht) async {
+        do {
+            dashboardData = try await APIService.shared.getDashboard(yachtId: yacht.id)
+            print("✅ Loaded dashboard data for \(yacht.name)")
+        } catch {
+            errorMessage = error.localizedDescription
+            print("❌ Error loading dashboard: \(error)")
+        }
+    }
+    
     private func logButtonText(data: DashboardViewModel) -> String {
         if data.activeBooking != nil {
             if !data.hasDepartureLog {
