@@ -29,6 +29,7 @@ type Invoice struct {
 	IssuedDate    time.Time     `gorm:"type:date" json:"issued_date"`
 	PaidDate      *time.Time    `gorm:"type:date" json:"paid_date,omitempty"`
 	XeroSyncedAt  *time.Time    `json:"xero_synced_at,omitempty"`
+	XeroURL       string        `gorm:"-" json:"xero_url"` // Computed field
 	CreatedAt     time.Time     `json:"created_at"`
 	UpdatedAt     time.Time     `json:"updated_at"`
 
@@ -39,6 +40,13 @@ type Invoice struct {
 
 func (Invoice) TableName() string {
 	return "invoices"
+}
+
+// GenerateXeroURL creates the Xero invoice URL from the XeroInvoiceID
+func (i *Invoice) GenerateXeroURL() {
+	if i.XeroInvoiceID != "" {
+		i.XeroURL = "https://go.xero.com/AccountsReceivable/View.aspx?InvoiceID=" + i.XeroInvoiceID
+	}
 }
 
 // InvoiceViewModel - Aggregated view for invoice dashboard

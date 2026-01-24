@@ -6,8 +6,11 @@ struct Invoice: Codable, Identifiable {
     let yachtId: UUID
     let userId: UUID
     let xeroInvoiceId: String?
+    let invoiceNumber: String
+    let xeroURL: String?
     let amount: Double
     let dueDate: Date
+    let issuedDate: Date
     let status: InvoiceStatus
     let description: String
     let createdAt: Date
@@ -18,8 +21,11 @@ struct Invoice: Codable, Identifiable {
         case yachtId = "yacht_id"
         case userId = "user_id"
         case xeroInvoiceId = "xero_invoice_id"
+        case invoiceNumber = "invoice_number"
+        case xeroURL = "xero_url"
         case amount
         case dueDate = "due_date"
+        case issuedDate = "issued_date"
         case status
         case description
         case createdAt = "created_at"

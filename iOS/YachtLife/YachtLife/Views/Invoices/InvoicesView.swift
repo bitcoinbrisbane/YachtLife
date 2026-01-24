@@ -94,8 +94,8 @@ struct InvoiceDetailView: View {
                     Section("Invoice Details") {
                         LabeledContent("Invoice Number", value: invoice.xeroInvoiceId ?? "N/A")
                         LabeledContent("Amount", value: String(format: "$%.2f", invoice.amount))
-                        LabeledContent("Due Date", value: invoice.dueDate, format: .dateTime)
-                        LabeledContent("Issued Date", value: invoice.createdAt, format: .dateTime)
+                        LabeledContent("Issued Date", value: formatDate(invoice.issuedDate))
+                        LabeledContent("Due Date", value: formatDate(invoice.dueDate))
                         LabeledContent("Status", value: invoice.status.rawValue.capitalized)
                     }
 
@@ -105,20 +105,51 @@ struct InvoiceDetailView: View {
 
                     if let paidAt = invoice.paidAt {
                         Section("Payment") {
-                            LabeledContent("Paid Date", value: paidAt, format: .dateTime)
+                            LabeledContent("Paid Date", value: formatDate(paidAt))
                         }
                     }
 
+                    if let xeroURL = invoice.xeroURL, let url = URL(string: xeroURL) {
+                        Section {
+                            Link(destination: url) {
+                                HStack {
+                                    Image(systemName: "arrow.up.right.square")
+                                    Text("View in Xero")
+                                        .fontWeight(.semibold)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                    }
+
+                    // Apple Pay button - only show for unpaid invoices
                     if invoice.status != .paid {
                         Section {
-                            Button("Pay with Apple Pay") {
-                                // TODO: Implement Apple Pay
+                            Button(action: {
+                                // Placeholder - not wired up yet
+                                print("Apple Pay button tapped")
+                            }) {
+                                HStack {
+                                    Image(systemName: "apple.logo")
+                                        .font(.title3)
+                                    Text("Pay with Apple Pay")
+                                        .fontWeight(.semibold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .foregroundColor(.white)
+                                .background(Color.black)
+                                .cornerRadius(8)
                             }
-                            .buttonStyle(.borderedProminent)
+                            .listRowBackground(Color.clear)
                         }
                     }
                 }
-                .navigationTitle("Invoice Details")
+                .navigationTitle(invoice.xeroInvoiceId ?? "Invoice")
+                .navigationBarTitleDisplayMode(.inline)
             } else if isLoading {
                 ProgressView("Loading invoice...")
             } else {
@@ -126,10 +157,25 @@ struct InvoiceDetailView: View {
             }
         }
         .task {
-            // TODO: Implement getInvoice(id:) in APIService
-            // For now, we'd need to add an endpoint to fetch individual invoice details
-            print("Loading invoice \(invoiceId)")
+            await loadInvoice()
         }
+    }
+
+    private func loadInvoice() async {
+        isLoading = true
+        do {
+            invoice = try await APIService.shared.getInvoice(id: invoiceId)
+            print("✅ Loaded invoice \(invoiceId)")
+        } catch {
+            print("❌ Error loading invoice: \(error)")
+        }
+        isLoading = false
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd/MM/yyyy"
+        return formatter.string(from: date)
     }
 }
 

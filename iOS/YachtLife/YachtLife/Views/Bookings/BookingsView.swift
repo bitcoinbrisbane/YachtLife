@@ -227,6 +227,7 @@ struct BookingDetailView: View {
             }
         }
         .navigationTitle("Voyage")
+        .navigationBarTitleDisplayMode(.inline)
         .overlay {
             if isLoading {
                 ProgressView("Loading...")

@@ -50,6 +50,9 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 			// Invoice dashboard route
 			protected.GET("/invoices/dashboard", invoiceHandler.GetInvoicesDashboard)
+
+			// Invoice detail route
+			protected.GET("/invoices/:id", invoiceHandler.GetInvoice)
 		}
 
 		// Yacht routes (public - no authentication required for browsing)
