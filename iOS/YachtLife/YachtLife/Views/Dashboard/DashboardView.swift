@@ -99,7 +99,7 @@ struct DashboardView: View {
 
     private func loadYachtData() {
         // Only load data if we have a selected yacht
-        guard let yacht = authViewModel.selectedYacht else {
+        guard authViewModel.selectedYacht != nil else {
             print("⚠️ No selected yacht - skipping data load")
             return
         }
@@ -108,29 +108,31 @@ struct DashboardView: View {
         errorMessage = nil
 
         Task {
-            do {
-                dashboardData = try await APIService.shared.getDashboard(yachtId: yacht.id)
-                print("✅ Loaded dashboard data for \(yacht.name)")
-            } catch {
-                errorMessage = error.localizedDescription
-                print("❌ Error loading dashboard: \(error)")
-            }
+            await fetchDashboardData()
             isLoading = false
         }
     }
 
     private func refreshDashboard() async {
         // Only refresh if we have a selected yacht
+        guard authViewModel.selectedYacht != nil else {
+            return
+        }
+        
+        await fetchDashboardData()
+    }
+    
+    private func fetchDashboardData() async {
         guard let yacht = authViewModel.selectedYacht else {
             return
         }
         
         do {
             dashboardData = try await APIService.shared.getDashboard(yachtId: yacht.id)
-            print("✅ Refreshed dashboard data for \(yacht.name)")
+            print("✅ Loaded dashboard data for \(yacht.name)")
         } catch {
             errorMessage = error.localizedDescription
-            print("❌ Error refreshing dashboard: \(error)")
+            print("❌ Error loading dashboard: \(error)")
         }
     }
     
