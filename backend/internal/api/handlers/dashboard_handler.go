@@ -41,6 +41,8 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 	}
 
 	viewModel := models.DashboardViewModel{
+		HasDepartureLog:  false,
+		HasReturnLog:     false,
 		UpcomingBookings: []models.BookingInfo{},
 		RecentActivities: []models.ActivityInfo{},
 	}
