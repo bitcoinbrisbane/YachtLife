@@ -94,8 +94,8 @@ struct InvoiceDetailView: View {
                     Section("Invoice Details") {
                         LabeledContent("Invoice Number", value: invoice.xeroInvoiceId ?? "N/A")
                         LabeledContent("Amount", value: String(format: "$%.2f", invoice.amount))
-                        LabeledContent("Due Date", value: formatDate(invoice.dueDate))
                         LabeledContent("Issued Date", value: formatDate(invoice.issuedDate))
+                        LabeledContent("Due Date", value: formatDate(invoice.dueDate))
                         LabeledContent("Status", value: invoice.status.rawValue.capitalized)
                     }
 
