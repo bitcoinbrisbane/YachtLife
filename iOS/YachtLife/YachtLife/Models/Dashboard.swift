@@ -9,6 +9,7 @@ struct DashboardViewModel: Codable {
     let fuelLiters: Double
     let activeBooking: BookingInfo?
     let hasDepartureLog: Bool
+    let hasReturnLog: Bool
     let upcomingBookings: [BookingInfo]
     let recentActivities: [ActivityInfo]
 
@@ -20,6 +21,7 @@ struct DashboardViewModel: Codable {
         case fuelLiters = "fuel_liters"
         case activeBooking = "active_booking"
         case hasDepartureLog = "has_departure_log"
+        case hasReturnLog = "has_return_log"
         case upcomingBookings = "upcoming_bookings"
         case recentActivities = "recent_activities"
     }

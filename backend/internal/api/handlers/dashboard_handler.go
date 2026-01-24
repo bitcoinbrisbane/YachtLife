@@ -113,6 +113,12 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 		err = h.db.Where("booking_id = ? AND entry_type = ?", activeBooking.ID, "depart").
 			First(&departureLog).Error
 		viewModel.HasDepartureLog = (err == nil)
+
+		// Check for return log
+		var returnLog models.LogbookEntry
+		err = h.db.Where("booking_id = ? AND entry_type = ?", activeBooking.ID, "return").
+			First(&returnLog).Error
+		viewModel.HasReturnLog = (err == nil)
 	}
 
 	// 5. Get upcoming bookings (next 3 for this user)
