@@ -11,6 +11,7 @@ struct MaintenanceView: View {
                 MaintenanceRequestRow(request: request)
             }
             .navigationTitle("Maintenance")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 Button {
                     showingCreateRequest = true
